@@ -1,70 +1,72 @@
 package com.example.studyplanner.ui.ranking
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.studyplanner.data.repository.RankingRepository
-import com.example.studyplanner.domain.model.RankingItem
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.example.studyplanner.databinding.ItemRankingBinding
+import com.example.studyplanner.model.DailyRanking
+import com.example.studyplanner.model.SeasonRanking
 
-data class RankingUiState(
-    val rankings: List<RankingItem> = emptyList(),
-    val userRank: RankingItem? = null,
-    val rankType: String = "DAILY",
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
+sealed class RankingItem {
+    data class DailyItem(val ranking: DailyRanking) : RankingItem()
+    data class SeasonItem(val ranking: SeasonRanking) : RankingItem()
+}
 
-class RankingViewModel(
-    private val rankingRepository: RankingRepository
-) : ViewModel() {
+class RankingAdapter(
+    private val onChallengeClick: (String) -> Unit
+) : ListAdapter<RankingItem, RankingAdapter.RankingViewHolder>(RankingDiffCallback()) {
 
-    private val _uiState = MutableStateFlow(RankingUiState())
-    val uiState: StateFlow<RankingUiState> = _uiState.asStateFlow()
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RankingViewHolder {
+        val binding = ItemRankingBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return RankingViewHolder(binding, onChallengeClick)
+    }
 
-    fun loadRankings(seasonId: String, rankType: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                rankType = rankType,
-                isLoading = true,
-                error = null
-            )
+    override fun onBindViewHolder(holder: RankingViewHolder, position: Int) {
+        holder.bind(getItem(position))
+    }
 
-            try {
-                val result = when (rankType.uppercase()) {
-                    "DAILY" -> rankingRepository.getDailyRanking(seasonId)
-                    "SEASON" -> rankingRepository.getSeasonRanking(seasonId)
-                    else -> null
+    class RankingViewHolder(
+        private val binding: ItemRankingBinding,
+        private val onChallengeClick: (String) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(item: RankingItem) {
+            when (item) {
+                is RankingItem.DailyItem -> {
+                    binding.rankTextView.text = "${item.ranking.rank}위"
+                    binding.userIdTextView.text = item.ranking.userId
+                    binding.scoreTextView.text = "${item.ranking.dailyScore}점"
+                    binding.challengeButton.setOnClickListener {
+                        onChallengeClick(item.ranking.userId)
+                    }
                 }
-
-                if (result != null) {
-                    _uiState.value = _uiState.value.copy(
-                        rankings = result.rankings,
-                        userRank = result.userRank,
-                        isLoading = false
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        error = "Invalid rank type",
-                        isLoading = false
-                    )
+                is RankingItem.SeasonItem -> {
+                    binding.rankTextView.text = "${item.ranking.rank}위"
+                    binding.userIdTextView.text = item.ranking.userId
+                    binding.scoreTextView.text = "${item.ranking.totalScore}점"
+                    binding.challengeButton.setOnClickListener {
+                        onChallengeClick(item.ranking.userId)
+                    }
                 }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Unknown error",
-                    isLoading = false
-                )
             }
         }
     }
 
-    fun switchRankType(seasonId: String, rankType: String) {
-        loadRankings(seasonId, rankType)
-    }
+    class RankingDiffCallback : DiffUtil.ItemCallback<RankingItem>() {
+        override fun areItemsTheSame(oldItem: RankingItem, newItem: RankingItem): Boolean {
+            return when {
+                oldItem is RankingItem.DailyItem && newItem is RankingItem.DailyItem ->
+                    oldItem.ranking.userId == newItem.ranking.userId
+                oldItem is RankingItem.SeasonItem && newItem is RankingItem.SeasonItem ->
+                    oldItem.ranking.userId == newItem.ranking.userId
+                else -> false
+            }
+        }
 
-    fun refreshRankings(seasonId: String) {
-        loadRankings(seasonId, _uiState.value.rankType)
+        override fun areContentsTheSame(oldItem: RankingItem, newItem: RankingItem): Boolean {
+            return oldItem == newItem
+        }
     }
 }

@@ -1,55 +1,51 @@
-package com.example.studyplanner.ui.profile
+package com.example.studyplanner.ui.calendar
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.studyplanner.data.repository.UserRepository
-import com.example.studyplanner.domain.model.User
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import com.example.studyplanner.model.CalendarDay
+import com.example.studyplanner.network.RetrofitClient
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
-data class ProfileUiState(
-    val user: User? = null,
-    val totalScore: Int = 0,
-    val accuracy: Float = 0f,
-    val problemsSolved: Int = 0,
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
+class CalendarViewModel : ViewModel() {
 
-class ProfileViewModel(
-    private val userRepository: UserRepository
-) : ViewModel() {
+    private val apiService = RetrofitClient.getApiService()
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
-    val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
+    private val _calendarData = MutableLiveData<Map<String, CalendarDay>>()
+    val calendarData: LiveData<Map<String, CalendarDay>> = _calendarData
 
-    init {
-        loadProfile()
-    }
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
 
-    private fun loadProfile() {
+    private val dayStatusMap = mutableMapOf<String, String>()
+
+    fun loadCurrentMonth() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _isLoading.value = true
             try {
-                val user = userRepository.getCurrentUser()
-                _uiState.value = _uiState.value.copy(
-                    user = user,
-                    isLoading = false
-                )
+                val token = getToken()
+                val calendar = Calendar.getInstance()
+                val yearMonth = SimpleDateFormat("yyyy-MM", Locale.KOREA).format(calendar.time)
+
+                val response = apiService.getCalendarMonth("Bearer $token", yearMonth)
+                // 응답 처리
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
-    fun logout() {
-        viewModelScope.launch {
-            userRepository.logout()
-        }
+    fun getDayStatus(date: java.time.LocalDate): String? {
+        val dateString = date.toString()
+        return dayStatusMap[dateString]
+    }
+
+    private fun getToken(): String {
+        return "your_token_here"
     }
 }

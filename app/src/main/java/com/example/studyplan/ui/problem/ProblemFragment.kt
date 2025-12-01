@@ -4,64 +4,69 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import kotlinx.coroutines.launch
-import dagger.hilt.android.AndroidEntryPoint
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.studyplanner.databinding.FragmentProblemBinding
 
-@AndroidEntryPoint
 class ProblemFragment : Fragment() {
 
-    private val viewModel: ProblemViewModel by viewModels()
-    private var startTime: Long = 0
+    private lateinit var binding: FragmentProblemBinding
+    private lateinit var viewModel: ProblemViewModel
+    private lateinit var adapter: ProblemAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_problem, container, false)
+    ): View {
+        binding = FragmentProblemBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = ViewModelProvider(this).get(ProblemViewModel::class.java)
 
-        startTime = System.currentTimeMillis()
+        adapter = ProblemAdapter { problem ->
+            viewModel.solveProblem(problem.id)
+        }
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    updateUI(state)
+        binding.problemRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.problemRecyclerView.adapter = adapter
+
+        setupSubjectFilter()
+        observeViewModel()
+        viewModel.loadProblems()
+    }
+
+    private fun setupSubjectFilter() {
+        val subjects = listOf("모든 과목", "국어", "수학", "영어", "사회", "과학", "역사")
+        binding.subjectFilterSpinner.setOnItemSelectedListener { position ->
+            val selectedSubject = if (position == 0) null else subjects[position]
+            viewModel.filterBySubject(selectedSubject)
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.problems.observe(viewLifecycleOwner) { problems ->
+            adapter.submitList(problems)
+        }
+
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+
+        viewModel.solveResult.observe(viewLifecycleOwner) { result ->
+            result?.let {
+                val message = if (it.isCorrect) {
+                    "정답입니다! +${it.pointsEarned}점"
+                } else {
+                    "오답입니다."
                 }
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
             }
-        }
-
-        // 문제 로드
-        arguments?.getLong("problemId")?.let { problemId ->
-            viewModel.loadProblem(problemId)
-        }
-    }
-
-    private fun updateUI(state: ProblemUiState) {
-        // UI 업데이트 로직
-        // state.currentProblem -> 문제 표시
-        // state.isLoading -> 로딩 인디케이터
-        // state.submitResponse -> 정답 표시
-        // state.isSubmitted -> 제출 완료 화면
-    }
-
-    fun submitAnswer(selectedAnswer: Int) {
-        arguments?.getLong("problemId")?.let { problemId ->
-            val timeSpent = ((System.currentTimeMillis() - startTime) / 1000).toInt()
-            viewModel.submitAnswer(
-                userId = "current_user_id", // TODO: 현재 사용자 ID 가져오기
-                problemId = problemId,
-                selectedAnswer = selectedAnswer,
-                timeSpent = timeSpent
-            )
         }
     }
 }

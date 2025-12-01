@@ -1,34 +1,73 @@
-package com.example.studyplanner.ui.profile
+package com.example.studyplanner.ui.calendar
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import dagger.hilt.android.AndroidEntryPoint
+import androidx.lifecycle.ViewModelProvider
+import com.example.studyplanner.databinding.FragmentCalendarBinding
+import com.kizitonwose.calendarview.model.CalendarDay
+import com.kizitonwose.calendarview.model.DayOwner
+import com.kizitonwose.calendarview.ui.DayBinder
+import java.time.LocalDate
+import java.time.YearMonth
 
-@AndroidEntryPoint
-class ProfileFragment : Fragment() {
+class CalendarFragment : Fragment() {
 
-    private val viewModel: ProfileViewModel by viewModels()
+    private lateinit var binding: FragmentCalendarBinding
+    private lateinit var viewModel: CalendarViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_profile, container, false)
+    ): View {
+        binding = FragmentCalendarBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = ViewModelProvider(this).get(CalendarViewModel::class.java)
 
-        // TODO: 프로필 화면 구현
-        // - 사용자 정보 표시 (이름, 학년, 디플로마)
-        // - 총 점수, 정확도, 풀이한 문제 수 표시
-        // - 과목별 성과 표시
-        // - 설정 버튼 (학습 시간, 면학 시간 수정)
-        // - 로그아웃 버튼
+        setupCalendar()
+        observeViewModel()
+        viewModel.loadCurrentMonth()
+    }
+
+    private fun setupCalendar() {
+        val today = LocalDate.now()
+        val currentMonth = YearMonth.now()
+        val startMonth = currentMonth.minusMonths(100)
+        val endMonth = currentMonth.plusMonths(100)
+
+        binding.calendarView.setup(startMonth, endMonth, firstDayOfWeek = java.time.DayOfWeek.MONDAY)
+        binding.calendarView.scrollToMonth(currentMonth)
+
+        binding.calendarView.dayBinder = object : DayBinder<CalendarDayViewContainer> {
+            override fun create(parent: ViewGroup) = CalendarDayViewContainer(parent)
+            override fun bind(container: CalendarDayViewContainer, data: CalendarDay) {
+                container.day = data
+                if (data.owner == DayOwner.THIS_MONTH) {
+                    val dayStatus = viewModel.getDayStatus(data.date)
+                    container.bind(data.date, dayStatus)
+                }
+            }
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.calendarData.observe(viewLifecycleOwner) { data ->
+            binding.calendarView.notifyCalendarChanged()
+        }
+    }
+}
+
+class CalendarDayViewContainer(parent: ViewGroup) : androidx.recyclerview.widget.RecyclerView.ViewHolder(parent) {
+    lateinit var day: CalendarDay
+
+    fun bind(date: LocalDate, status: String?) {
+        // UI 업데이트
     }
 }

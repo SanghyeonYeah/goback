@@ -1,74 +1,50 @@
 package com.example.studyplanner.ui.problem
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.studyplanner.data.repository.ProblemRepository
-import com.example.studyplanner.domain.model.Problem
-import com.example.studyplanner.domain.model.SubmitAnswerResponse
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.example.studyplanner.databinding.ItemProblemBinding
+import com.example.studyplanner.model.Problem
 
-data class ProblemUiState(
-    val currentProblem: Problem? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val submitResponse: SubmitAnswerResponse? = null,
-    val isSubmitted: Boolean = false
-)
+class ProblemAdapter(
+    private val onSolveClick: (Problem) -> Unit
+) : ListAdapter<Problem, ProblemAdapter.ProblemViewHolder>(ProblemDiffCallback()) {
 
-class ProblemViewModel(
-    private val problemRepository: ProblemRepository
-) : ViewModel() {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProblemViewHolder {
+        val binding = ItemProblemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ProblemViewHolder(binding, onSolveClick)
+    }
 
-    private val _uiState = MutableStateFlow(ProblemUiState())
-    val uiState: StateFlow<ProblemUiState> = _uiState.asStateFlow()
+    override fun onBindViewHolder(holder: ProblemViewHolder, position: Int) {
+        holder.bind(getItem(position))
+    }
 
-    fun loadProblem(problemId: Long) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val problem = problemRepository.getProblem(problemId)
-                _uiState.value = _uiState.value.copy(
-                    currentProblem = problem,
-                    isLoading = false,
-                    isSubmitted = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
+    class ProblemViewHolder(
+        private val binding: ItemProblemBinding,
+        private val onSolveClick: (Problem) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(problem: Problem) {
+            binding.problemNumberTextView.text = "문제 ${problem.id}"
+            binding.subjectTextView.text = problem.subject
+            binding.pointsTextView.text = "${problem.points}점"
+            binding.contentTextView.text = problem.content
+
+            binding.solveButton.setOnClickListener {
+                onSolveClick(problem)
             }
         }
     }
 
-    fun submitAnswer(
-        userId: String,
-        problemId: Long,
-        selectedAnswer: Int,
-        timeSpent: Int
-    ) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val response = problemRepository.submitAnswer(userId, problemId, selectedAnswer, timeSpent)
-                _uiState.value = _uiState.value.copy(
-                    submitResponse = response,
-                    isSubmitted = true,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = e.message,
-                    isLoading = false
-                )
-            }
+    class ProblemDiffCallback : DiffUtil.ItemCallback<Problem>() {
+        override fun areItemsTheSame(oldItem: Problem, newItem: Problem): Boolean {
+            return oldItem.id == newItem.id
         }
-    }
 
-    fun reset() {
-        _uiState.value = ProblemUiState()
+        override fun areContentsTheSame(oldItem: Problem, newItem: Problem): Boolean {
+            return oldItem == newItem
+        }
     }
 }

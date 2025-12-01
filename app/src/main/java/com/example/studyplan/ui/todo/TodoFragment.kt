@@ -1,102 +1,61 @@
-package com.example.studyplanner.ui.objective
+package com.example.studyplanner.ui.todo
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.studyplanner.databinding.FragmentObjectiveBinding
-import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
+import com.example.studyplanner.R
+import com.example.studyplanner.databinding.FragmentTodoBinding
+import com.example.studyplanner.model.Todo
+import java.text.SimpleDateFormat
+import java.util.*
 
-@AndroidEntryPoint
-class ObjectiveFragment : Fragment() {
+class TodoFragment : Fragment() {
 
-    private val viewModel: ObjectiveViewModel by viewModels()
-    private lateinit var binding: FragmentObjectiveBinding
-    private lateinit var categoryAdapter: ObjectiveCategoryAdapter
+    private lateinit var binding: FragmentTodoBinding
+    private lateinit var viewModel: TodoViewModel
+    private lateinit var adapter: TodoAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentObjectiveBinding.inflate(inflater, container, false)
+        binding = FragmentTodoBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupUI()
+        viewModel = ViewModelProvider(this).get(TodoViewModel::class.java)
+
+        adapter = TodoAdapter { todo, isCompleted ->
+            viewModel.updateTodoStatus(todo.id, isCompleted)
+        }
+
+        binding.todoRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.todoRecyclerView.adapter = adapter
+
+        binding.addTodoButton.setOnClickListener {
+            // Todo 추가 다이얼로그 표시
+            Toast.makeText(requireContext(), "할 일 추가 기능", Toast.LENGTH_SHORT).show()
+        }
+
         observeViewModel()
-    }
-
-    private fun setupUI() {
-        categoryAdapter = ObjectiveCategoryAdapter { subject ->
-            showCreateObjectiveDialog(subject)
-        }
-
-        binding.categoryRecyclerView.apply {
-            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-            adapter = categoryAdapter
-        }
-
-        binding.addObjectiveButton.setOnClickListener {
-            showCreateObjectiveDialog()
-        }
-
-        binding.refreshButton.setOnClickListener {
-            viewModel.loadObjectives()
-        }
+        viewModel.loadTodosForToday()
     }
 
     private fun observeViewModel() {
-        lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                binding.apply {
-                    // Show categories
-                    categoryAdapter.submitList(state.categories)
-
-                    // Show objectives
-                    val objectiveText = state.objectives.joinToString("\n") { objective ->
-                        "${objective.subject}: ${objective.targetGrade}등급"
-                    }
-                    objectiveListTextView.text = if (objectiveText.isEmpty()) {
-                        "등록된 목표가 없습니다."
-                    } else {
-                        objectiveText
-                    }
-
-                    // Loading state
-                    loadingProgressBar.visibility =
-                        if (state.isLoading) View.VISIBLE else View.GONE
-
-                    // Show messages
-                    if (state.error != null) {
-                        Snackbar.make(root, state.error, Snackbar.LENGTH_SHORT).show()
-                        viewModel.clearMessages()
-                    }
-
-                    if (state.successMessage != null) {
-                        Snackbar.make(root, state.successMessage, Snackbar.LENGTH_SHORT).show()
-                        viewModel.clearMessages()
-                    }
-                }
-            }
+        viewModel.todos.observe(viewLifecycleOwner) { todos ->
+            adapter.submitList(todos)
         }
-    }
 
-    private fun showCreateObjectiveDialog(selectedSubject: String = "") {
-        val dialog = ObjectiveCreateDialog(
-            selectedSubject = selectedSubject,
-            onConfirm = { subject, targetGrade ->
-                viewModel.addObjective(subject, targetGrade)
-            }
-        )
-        dialog.show(parentFragmentManager, "ObjectiveCreateDialog")
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
     }
 }
