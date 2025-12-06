@@ -1,0 +1,24 @@
+# TensorFlow and Deep Learning
+tensorflow==2.14.0
+keras==2.14.0
+
+# Data Processing
+numpy==1.24.3
+pandas==2.1.1
+
+# Visualization (optional)
+matplotlib==3.8.0
+seaborn==0.12.2
+
+# Utilities
+tqdm==4.66.1
+pillow==10.0.1
+
+# TFLite Conversion
+flatbuffers==23.5.26
+
+# Testing
+pytest==7.4.2
+
+# Type Hints
+typing-extensions==4.8.0
