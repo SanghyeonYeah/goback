@@ -1,5 +1,4 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const session = require('express-session');
 const helmet = require('helmet');
@@ -10,7 +9,6 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 require('dotenv').config();
 
-/* ✅ PostgreSQL 연결 (Railway) */
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -20,27 +18,25 @@ const pool = new Pool({
 
 const app = express();
 
-/* ✅ Railway는 proxy 뒤에 있으므로 필수 */
+/* ===== 보안 설정 ===== */
 app.set('trust proxy', 1);
-
-/* ✅ 보안 미들웨어 */
 app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
 
-/* ✅ Body Parser */
+/* ===== Body Parser ===== */
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-/* ✅ 정적 파일 */
+/* ===== 정적 파일 ===== */
 app.use(express.static(path.join(__dirname, 'public')));
 
-/* ✅ View Engine */
+/* ===== View Engine ===== */
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-/* ✅ Session (Railway 대응) */
+/* ===== Session ===== */
 app.use(session({
   name: 'studyplanner.sid',
   secret: process.env.SESSION_SECRET || 'railway-secret',
@@ -53,26 +49,22 @@ app.use(session({
   }
 }));
 
-/* ✅ CSRF (쿠키 기반) */
+/* ===== CSRF ===== */
 const csrfProtection = csrf({ cookie: true });
 app.use((req, res, next) => {
-  if (
-    req.path === '/auth/login' ||
-    req.path === '/auth/register'
-  ) {
-    return next(); // ✅ 로그인 / 회원가입은 CSRF 예외
-  }
-
+  // 로그인 / 회원가입은 CSRF 제외
+  if (req.path === '/auth/login' || req.path === '/auth/register') return next();
   return csrfProtection(req, res, next);
 });
 
+// 모든 ejs에서 csrfToken과 user 사용 가능
 app.use((req, res, next) => {
-  res.locals.csrfToken = req.csrfToken();
+  if (req.csrfToken) res.locals.csrfToken = req.csrfToken();
   res.locals.user = req.session.user || null;
   next();
 });
 
-/* ✅ Rate Limit */
+/* ===== Rate Limit ===== */
 app.use('/api/', rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100
@@ -83,7 +75,7 @@ app.use('/auth/login', rateLimit({
   max: 5
 }));
 
-/* ✅ Routes */
+/* ===== Routes ===== */
 app.use('/auth', require('./routes/auth'));
 app.use('/api/todo', require('./routes/todo'));
 app.use('/api/problem', require('./routes/problem'));
@@ -92,7 +84,7 @@ app.use('/api/pvp', require('./routes/pvp'));
 app.use('/admin', require('./routes/admin'));
 app.use('/user', require('./routes/user'));
 
-/* ✅ 메인 페이지 */
+/* ===== 메인 페이지 ===== */
 app.get('/', (req, res) => {
   if (!req.session.user) return res.redirect('/auth/login');
   res.redirect('/home');
@@ -112,13 +104,12 @@ app.get('/home', (req, res) => {
   });
 });
 
-/* ✅ Todo */
+/* ===== Todo ===== */
 app.get('/todo', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
 
     const userId = req.session.user.id;
-
     const result = await pool.query(
       `SELECT id, subject, task, completed 
        FROM todos 
@@ -135,7 +126,7 @@ app.get('/todo', async (req, res) => {
   }
 });
 
-/* ✅ Calendar */
+/* ===== Calendar ===== */
 app.get('/calendar', (req, res) => {
   if (!req.session.user) return res.redirect('/auth/login');
 
@@ -148,13 +139,13 @@ app.get('/calendar', (req, res) => {
   });
 });
 
-/* ✅ Ranking */
+/* ===== Ranking ===== */
 app.get('/ranking', (req, res) => {
   if (!req.session.user) return res.redirect('/auth/login');
   res.render('ranking', { user: req.session.user });
 });
 
-/* ✅ Problem */
+/* ===== Problem ===== */
 app.get('/problem', (req, res) => {
   if (!req.session.user) return res.redirect('/auth/login');
 
@@ -164,18 +155,18 @@ app.get('/problem', (req, res) => {
   });
 });
 
-/* ✅ PVP */
+/* ===== PVP ===== */
 app.get('/pvp', (req, res) => {
   if (!req.session.user) return res.redirect('/auth/login');
   res.render('pvp', { user: req.session.user, match: null });
 });
 
-/* ✅ 404 */
+/* ===== 404 ===== */
 app.use((req, res) => {
   res.status(404).send('페이지를 찾을 수 없습니다.');
 });
 
-/* ✅ 에러 처리 */
+/* ===== Error Handler ===== */
 app.use((err, req, res, next) => {
   console.error(err.stack);
 
@@ -186,10 +177,10 @@ app.use((err, req, res, next) => {
   res.status(500).send('서버 오류');
 });
 
-/* ✅ Railway에서는 HTTPS 직접 생성 ❌ */
+/* ===== Start Server ===== */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Railway 서버 실행 중: ${PORT}`);
+  console.log(`Railway 서버 실행 중: ${PORT}`);
 });
 
 module.exports = { app, pool };
