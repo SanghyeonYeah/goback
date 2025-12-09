@@ -51,25 +51,27 @@ app.use(session({
 
 /* ===== CSRF ===== */
 const csrfProtection = csrf({ cookie: true });
-// CSRF 미들웨어
+
+// CSRF 보호 적용
 app.use((req, res, next) => {
-  // 로그인/회원가입 페이지에서만 csrf 검사 제외하고 싶다면 아래처럼 추가:
-  // if (req.path === '/auth/login' || req.path === '/auth/register') return next();
-
   csrfProtection(req, res, (err) => {
-    if (err) return next(err); // 토큰 없으면 error
+    if (err) return next(err);
 
-    // GET 요청은 토큰만 만들고 검사 스킵
-    if (req.method === 'GET') return next();
-
-    // POST/PUT/DELETE만 실제 검사함
-    next();
+    // GET은 검사 없이 토큰 생성만
+    return next();
   });
 });
 
-// EJS 변수 공통 설정
+// EJS에서 csrfToken 변수를 사용할 수 있게 설정
 app.use((req, res, next) => {
-  if (req.csrfToken) res.locals.csrfToken = req.csrfToken();
+  try {
+    if (req.csrfToken) {
+      res.locals.csrfToken = req.csrfToken();
+    }
+  } catch (e) {
+    res.locals.csrfToken = null;
+  }
+
   res.locals.user = req.session.user || null;
   next();
 });
