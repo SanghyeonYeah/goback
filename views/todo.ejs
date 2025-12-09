@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>할 일 - 스터디 플래너</title>
+    <link rel="stylesheet" href="/css/todo.css">
+</head>
+<body>
+<div class="container">
+    <h1>✅ 오늘의 할 일</h1>
+
+    <!-- 목표 요약 -->
+    <% if (goals) { %>
+    <div class="goal-summary">
+        <h2>🎯 목표 등급</h2>
+        <div class="goal-info">
+            <% Object.entries(goals).forEach(([subject, grade]) => { %>
+                <% if (grade) { %>
+                <div class="goal-item">
+                    <div class="subject"><%= subject %></div>
+                    <div class="grade"><%= grade %>등급</div>
+                </div>
+                <% } %>
+            <% }) %>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- 진행률 바 -->
+    <div class="progress-section">
+        <div class="progress-header">
+            <span class="progress-label">진행률</span>
+            <span class="progress-percentage"><%= progress.completed %>/<%= progress.total %> 완료 (<%= progress.percentage %>%)</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: <%= progress.percentage %>%;">
+                <%= progress.percentage %>%
+            </div>
+        </div>
+    </div>
+
+    <!-- Todo 리스트 -->
+    <% if (!todos || todos.length === 0) { %>
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <p>오늘 할 일이 없습니다.</p>
+        </div>
+    <% } else { %>
+        <ul class="todo-list">
+            <% todos.forEach(todo => { %>
+            <li class="todo-item <%= todo.completed ? 'completed' : '' %>">
+                <form action="/todos/<%= todo.id %>/toggle" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <label>
+                        <input type="checkbox" name="completed" onchange="this.form.submit()" <%= todo.completed ? 'checked' : '' %>>
+                        <div class="todo-content">
+                            <div class="todo-subject"><%= todo.subject %></div>
+                            <div class="todo-details">
+                                <span class="todo-detail-item">📝 <%= todo.task %></span>
+                            </div>
+                        </div>
+                    </label>
+                </form>
+            </li>
+            <% }) %>
+        </ul>
+    <% } %>
+
+    <a href="/home" class="back-link">← 홈으로 돌아가기</a>
+</div>
+<script type="module" src="/js/firebase.js"></script>
+</body>
+</html>

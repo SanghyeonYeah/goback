@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문제 등록 - 관리자</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .nav-links a {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fcc;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .option-group input[type="text"] {
+            flex: 1;
+        }
+
+        .option-group input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>문제 등록</h1>
+
+        <div class="nav-links">
+            <a href="/admin/problem" class="active">문제 등록</a>
+            <a href="/admin/season">시즌 관리</a>
+            <a href="/">홈으로</a>
+        </div>
+
+        <% if (success) { %>
+            <div class="success"><%= success %></div>
+        <% } %>
+        <% if (error) { %>
+            <div class="error"><%= error %></div>
+        <% } %>
+
+        <form action="/admin/problem" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            
+            <div class="form-group">
+                <label for="subject">과목</label>
+                <select id="subject" name="subject" required>
+                    <option value="">과목 선택</option>
+                    <option value="국어">국어</option>
+                    <option value="수학">수학</option>
+                    <option value="영어">영어</option>
+                    <option value="사회">사회</option>
+                    <option value="과학">과학</option>
+                    <option value="역사">역사</option>
+                    <option value="물리">물리</option>
+                    <option value="화학">화학</option>
+                    <option value="생명과학">생명과학</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="type">문제 유형</label>
+                <select id="type" name="type" required>
+                    <option value="">유형 선택</option>
+                    <option value="모의고사">모의고사</option>
+                    <option value="문제집">문제집</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="difficulty">난이도</label>
+                <select id="difficulty" name="difficulty" required>
+                    <option value="">난이도 선택</option>
+                    <option value="쉬움">쉬움</option>
+                    <option value="보통">보통</option>
+                    <option value="어려움">어려움</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="points">배점 (2-5점)</label>
+                <input type="number" id="points" name="points" min="2" max="5" required placeholder="배점을 입력하세요">
+            </div>
+
+            <div class="form-group">
+                <label for="question">문제</label>
+                <textarea id="question" name="question" required placeholder="문제를 입력하세요"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>선택지</label>
+                <div class="options-container">
+                    <div class="option-group">
+                        <input type="radio" name="answer" value="1" required>
+                        <input type="text" name="option1" placeholder="1번 선택지" required>
+                    </div>
+                    <div class="option-group">
+                        <input type="radio" name="answer" value="2" required>
+                        <input type="text" name="option2" placeholder="2번 선택지" required>
+                    </div>
+                    <div class="option-group">
+                        <input type="radio" name="answer" value="3" required>
+                        <input type="text" name="option3" placeholder="3번 선택지" required>
+                    </div>
+                    <div class="option-group">
+                        <input type="radio" name="answer" value="4" required>
+                        <input type="text" name="option4" placeholder="4번 선택지" required>
+                    </div>
+                    <div class="option-group">
+                        <input type="radio" name="answer" value="5" required>
+                        <input type="text" name="option5" placeholder="5번 선택지" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="explanation">해설</label>
+                <textarea id="explanation" name="explanation" placeholder="문제 해설을 입력하세요"></textarea>
+            </div>
+
+            <button type="submit">문제 등록</button>
+        </form>
+
+        <form action="/auth/logout" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="logout-btn">로그아웃</button>
+        </form>
+    </div>
+    <script type="module" src="/js/firebase.js"></script>
+</body>
+</html>

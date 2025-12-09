@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랭킹 - 스터디 플래너</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .season-info {
+            background: #f5f7ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .season-info h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .season-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .ranking-list {
+            list-style: none;
+        }
+
+        .ranking-item {
+            background: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .ranking-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .rank {
+            font-size: 28px;
+            font-weight: 700;
+            width: 60px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .rank-1 {
+            color: #FFD700;
+        }
+
+        .rank-2 {
+            color: #C0C0C0;
+        }
+
+        .rank-3 {
+            color: #CD7F32;
+        }
+
+        .rank-other {
+            color: #667eea;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .username {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .user-diploma {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+            margin-right: 15px;
+        }
+
+        .pvp-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .pvp-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .my-rank {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-color: #667eea;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <ul class="ranking-list">
+        <% rankings.forEach((user, index) => { %>
+            <li class="ranking-item <%= user.id === session.user.id ? 'my-rank' : '' %>">
+            <div class="rank <%= index < 3 ? 'rank-' + (index+1) : 'rank-other' %>">
+                <%= index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index+1 %>
+            </div>
+            <div class="user-info">
+                <div class="username"><%= user.username %> <%= user.id === session.user.id ? '(나)' : '' %></div>
+                <div class="user-diploma"><%= user.diploma %></div>
+            </div>
+            <div class="score"><%= user.total_score %>점</div>
+            <% if(user.id !== session.user.id){ %>
+                <button class="pvp-btn" onclick="challengePVP('<%= user.username %>')">PVP 도전</button>
+            <% } %>
+            </li>
+        <% }) %>
+    </ul>
+
+    <script>
+        function switchTab(type) {
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 실제로는 서버에서 데이터를 가져와야 함
+            console.log('Switch to ' + type + ' ranking');
+        }
+
+        function challengePVP(userId) {
+            if (confirm(`${userId}에게 PVP를 신청하시겠습니까?`)) {
+                // PVP 페이지로 이동
+                window.location.href = `/pvp/challenge/${userId}`;
+            }
+        }
+    </script>
+    <script type="module" src="/js/firebase.js"></script>
+</body>
+</html>

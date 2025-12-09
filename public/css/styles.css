@@ -1,0 +1,579 @@
+/* 기본 스타일 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #f5f7fa;
+    color: #2c3e50;
+    line-height: 1.6;
+}
+
+/* 네비게이션 */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-brand {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    gap: 25px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.3s;
+    padding: 8px 16px;
+    border-radius: 6px;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.user-info {
+    color: white;
+    font-size: 14px;
+}
+
+/* 컨테이너 */
+.container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* 웰컴 섹션 */
+.welcome-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.welcome-section h1 {
+    font-size: 36px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: #7f8c8d;
+}
+
+/* 대시보드 그리드 */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+}
+
+/* 카드 */
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.card h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+/* D-day 카드 */
+.dday-content {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.dday-number {
+    font-size: 64px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.dday-name {
+    font-size: 24px;
+    margin: 15px 0;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.dday-date {
+    font-size: 16px;
+    color: #7f8c8d;
+}
+
+/* Todo 요약 */
+.todo-summary {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.progress-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+        #667eea var(--progress),
+        #e9ecef var(--progress)
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-circle::before {
+    content: '';
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: white;
+}
+
+.progress-text {
+    position: relative;
+    z-index: 1;
+    font-size: 28px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.progress-details {
+    flex: 1;
+}
+
+.progress-label {
+    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.view-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.view-link:hover {
+    text-decoration: underline;
+}
+
+/* 랭킹 */
+.my-ranking {
+    display: flex;
+    gap: 20px;
+}
+
+.ranking-item {
+    flex: 1;
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea10, #764ba210);
+    border-radius: 12px;
+}
+
+.ranking-label {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+.ranking-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 5px;
+}
+
+.ranking-score {
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.ranking-divider {
+    width: 1px;
+    background: #e9ecef;
+}
+
+/* 랭킹 리스트 */
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rank-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.rank-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.rank-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.rank-number.top {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.rank-info {
+    flex: 1;
+}
+
+.rank-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.rank-id {
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.rank-score {
+    font-size: 18px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+/* 액션 버튼 */
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 25px;
+    background: linear-gradient(135deg, #667eea10, #764ba210);
+    border-radius: 12px;
+    text-decoration: none;
+    color: #2c3e50;
+    transition: all 0.3s;
+}
+
+.action-btn:hover {
+    background: linear-gradient(135deg, #667eea20, #764ba220);
+    transform: scale(1.05);
+}
+
+.action-btn .icon {
+    font-size: 36px;
+}
+
+.action-btn span:last-child {
+    font-weight: 600;
+}
+
+/* 로딩 및 기타 */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+.error {
+    background: #fee;
+    color: #c33;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border: 1px solid #fcc;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .todo-summary {
+        flex-direction: column;
+    }
+
+    .my-ranking {
+        flex-direction: column;
+    }
+
+    .ranking-divider {
+        width: 100%;
+        height: 1px;
+    }
+}
+
+/* Todo 페이지 */
+.goal-form {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group select,
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.form-group select:focus,
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn {
+    padding: 14px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6c757d;
+}
+
+/* Todo 리스트 */
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.todo-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+}
+
+.todo-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.todo-item.completed {
+    opacity: 0.6;
+}
+
+.todo-item.completed .todo-text {
+    text-decoration: line-through;
+}
+
+.todo-checkbox {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.todo-subject {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #667eea;
+    color: white;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.todo-text {
+    flex: 1;
+    font-size: 16px;
+    color: #2c3e50;
+}
+
+/* 달력 */
+.calendar {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.calendar-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.calendar-nav button {
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    color: #7f8c8d;
+    padding: 10px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.calendar-day:hover {
+    border-color: #667eea;
+    background: #f8f9fa;
+}
+
+.calendar-day.today {
+    border-color: #667eea;
+    background: #667eea10;
+}
+
+.calendar-day.success {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.calendar-day.fail {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+.day-number {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.day-status {
+    font-size: 20px;
+}

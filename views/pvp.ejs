@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PVP - 스터디 플래너</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .nav-menu {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu a {
+            padding: 12px 24px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .pvp-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .match-info {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .player {
+            text-align: center;
+            flex: 1;
+        }
+
+        .player-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .player-status {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .vs {
+            font-size: 36px;
+            font-weight: bold;
+            padding: 0 30px;
+        }
+
+        .timer {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .timer-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .timer-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .timer-display.warning {
+            color: #f5576c;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .problem-section {
+            margin-bottom: 30px;
+        }
+
+        .problem-question {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            font-size: 18px;
+            color: #333;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #e3f2fd;
+        }
+
+        .option input[type="radio"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .option-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-container {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .result-win {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .result-lose {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .result-draw {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+
+        .result-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .result-win .result-title {
+            color: #155724;
+        }
+
+        .result-lose .result-title {
+            color: #721c24;
+        }
+
+        .result-draw .result-title {
+            color: #856404;
+        }
+
+        .result-detail {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .back-btn {
+            flex: 1;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .rematch-btn {
+            flex: 1;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .waiting-message {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚔️ PVP 대결</h1>
+        </div>
+
+        <div class="nav-menu">
+            <a href="/">홈</a>
+            <a href="/todo">할 일</a>
+            <a href="/calendar">달력</a>
+            <a href="/ranking">랭킹</a>
+            <a href="/problem">문제 풀이</a>
+            <a href="/pvp" class="active">PVP</a>
+        </div>
+
+        <div class="pvp-container">
+            <% if (match && match.status === 'in_progress') { %>
+                <div class="match-info">
+                    <div class="player">
+                        <div class="player-name"><%= user.username %></div>
+                        <div class="player-status">나</div>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="player">
+                        <div class="player-name"><%= opponent.username %></div>
+                        <div class="player-status">상대방</div>
+                    </div>
+                </div>
+
+                <div class="timer">
+                    <div class="timer-label">남은 시간</div>
+                    <div class="timer-display" id="timer">5:00</div>
+                </div>
+
+                <div class="problem-section">
+                    <div class="problem-question">
+                        <%= problem.question %>
+                    </div>
+
+                    <form id="pvpForm" method="POST" action="/pvp/submit">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <input type="hidden" name="match_id" value="<%= match.id %>">
+                        
+                        <div class="options-container">
+                            <% for (let i = 1; i <= 5; i++) { %>
+                                <label class="option" onclick="selectOption(this)">
+                                    <input type="radio" name="answer" value="<%= i %>" required>
+                                    <span class="option-text">
+                                        <%= i %>. <%= problem['option' + i] %>
+                                    </span>
+                                </label>
+                            <% } %>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">정답 제출</button>
+                    </form>
+                </div>
+
+                <script>
+                    let timeLeft = 300;
+                    const timerDisplay = document.getElementById('timer');
+                    const submitBtn = document.getElementById('submitBtn');
+
+                    const timer = setInterval(() => {
+                        timeLeft--;
+                        const minutes = Math.floor(timeLeft / 60);
+                        const seconds = timeLeft % 60;
+                        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                        if (timeLeft <= 30) {
+                            timerDisplay.classList.add('warning');
+                        }
+
+                        if (timeLeft <= 0) {
+                            clearInterval(timer);
+                            submitBtn.disabled = true;
+                            alert('시간이 종료되었습니다!');
+                            document.getElementById('pvpForm').submit();
+                        }
+                    }, 1000);
+
+                    function selectOption(label) {
+                        document.querySelectorAll('.option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        label.classList.add('selected');
+                    }
+                </script>
+
+            <% } else if (match && match.status === 'finished') { %>
+                <% 
+                    let resultClass = 'result-draw';
+                    let resultText = '무승부';
+                    let resultEmoji = '🤝';
+                    
+                    if (match.winner_id === user.id) {
+                        resultClass = 'result-win';
+                        resultText = '승리!';
+                        resultEmoji = '🎉';
+                    } else if (match.winner_id === opponent.id) {
+                        resultClass = 'result-lose';
+                        resultText = '패배';
+                        resultEmoji = '😢';
+                    }
+                %>
+                
+                <div class="result-container <%= resultClass %>">
+                    <div class="result-title"><%= resultEmoji %> <%= resultText %></div>
+                    <div class="result-detail">
+                        정답: <%= problem.answer %>번<br>
+                        <%= user.username %>: <%= myAnswer || '미제출' %><br>
+                        <%= opponent.username %>: <%= opponentAnswer || '미제출' %>
+                    </div>
+                    
+                    <div class="button-group">
+                        <a href="/ranking" class="back-btn">랭킹 보기</a>
+                        <button class="rematch-btn" onclick="location.href='/pvp?opponent=<%= opponent.id %>'">
+                            재대결
+                        </button>
+                    </div>
+                </div>
+
+            <% } else { %>
+                <div class="waiting-message">
+                    <div class="loading" style="font-size: 48px;">⏳</div>
+                    <p style="margin-top: 20px;">대결 상대를 찾고 있습니다...</p>
+                    <p style="margin-top: 10px; color: #999;">랭킹에서 상대를 선택하거나 랜덤 매칭을 기다려주세요.</p>
+                    <div style="margin-top: 30px;">
+                        <a href="/ranking" class="back-btn" style="max-width: 300px; margin: 0 auto;">
+                            랭킹에서 상대 선택하기
+                        </a>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+    <script type="module" src="/js/firebase.js"></script>
+</body>
+</html>

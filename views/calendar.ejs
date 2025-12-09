@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>달력 플랜 - 스터디 플래너</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .month-nav button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .month-nav button:hover {
+            transform: translateY(-2px);
+        }
+
+        .current-month {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .day-header {
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            padding: 15px;
+            background: #f5f7ff;
+            border-radius: 8px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .day-cell:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .day-number {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .day-status {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .status-complete {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-incomplete {
+            background: #f44336;
+            color: white;
+        }
+
+        .today {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+
+        .legend {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f7ff;
+            border-radius: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 달력 플랜</h1>
+
+        <div class="calendar-header">
+            <div class="month-nav">
+                <button onclick="previousMonth()">◀ 이전</button>
+                <span class="current-month"><%= currentMonth %></span>
+                <button onclick="nextMonth()">다음 ▶</button>
+            </div>
+        </div>
+
+        <div class="calendar-grid">
+            <div class="day-header">일</div>
+            <div class="day-header">월</div>
+            <div class="day-header">화</div>
+            <div class="day-header">수</div>
+            <div class="day-header">목</div>
+            <div class="day-header">금</div>
+            <div class="day-header">토</div>
+
+            <% calendarDays.forEach(day => { %>
+                <div class="day-cell <%= day.isToday ? 'today' : '' %>">
+                    <div class="day-number"><%= day.date %></div>
+                    <% if (day.status === 'complete') { %>
+                        <div class="day-status status-complete">완</div>
+                    <% } else if (day.status === 'incomplete') { %>
+                        <div class="day-status status-incomplete">실</div>
+                    <% } %>
+                </div>
+            <% }); %>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-icon status-complete">완</div>
+                <span>완료 (다음날 +10% 보너스)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-icon status-incomplete">실</div>
+                <span>미완료</span>
+            </div>
+        </div>
+
+        <a href="/home" class="back-link">← 홈으로 돌아가기</a>
+    </div>
+
+    <script src="/js/calendar.js"></script>
+    <script type="module" src="/js/firebase.js"></script>
+</body>
+</html>

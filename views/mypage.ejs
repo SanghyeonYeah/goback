@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>마이페이지 - 스터디 플래너</title>
+  <style>
+    body { font-family: sans-serif; padding: 30px; background: #f0f2f5; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; }
+    h1 { color: #667eea; text-align: center; margin-bottom: 20px; }
+    label { display: block; margin: 10px 0 5px; }
+    input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+    button { margin-top: 20px; width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #764ba2; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>마이페이지</h1>
+
+    <form action="/user/update-goals" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label for="korean">국어</label>
+      <input type="number" name="korean" min="1" max="5" value="<%= goals ? goals.korean : 3 %>" required>
+
+      <label for="math">수학</label>
+      <input type="number" name="math" min="1" max="5" value="<%= goals ? goals.math : 3 %>" required>
+
+      <label for="social">사회</label>
+      <input type="number" name="social" min="1" max="5" value="<%= goals ? goals.social : 3 %>" required>
+
+      <label for="science">과학</label>
+      <input type="number" name="science" min="1" max="5" value="<%= goals ? goals.science : 3 %>" required>
+
+      <label for="english">영어</label>
+      <input type="number" name="english" min="1" max="5" value="<%= goals ? goals.english : 3 %>" required>
+
+      <label for="history">역사</label>
+      <input type="number" name="history" min="1" max="5" value="<%= goals ? goals.history : 3 %>" required>
+
+      <label for="studyPeriod">학습 기간 (일)</label>
+      <input type="number" name="studyPeriod" min="1" max="90" value="<%= goals ? goals.study_period : 14 %>" required>
+
+      <button type="submit">목표 등급 저장/재설정</button>
+    </form>
+
+    <a href="/home" style="display:block; margin-top:20px; text-align:center; color:#667eea;">← 홈으로 돌아가기</a>
+  </div>
+  <script type="module" src="/js/firebase.js"></script>
+</body>
+</html>
