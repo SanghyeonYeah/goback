@@ -55,7 +55,16 @@ app.use(session({
 
 /* ✅ CSRF (쿠키 기반) */
 const csrfProtection = csrf({ cookie: true });
-app.use(csrfProtection);
+app.use((req, res, next) => {
+  if (
+    req.path === '/auth/login' ||
+    req.path === '/auth/register'
+  ) {
+    return next(); // ✅ 로그인 / 회원가입은 CSRF 예외
+  }
+
+  return csrfProtection(req, res, next);
+});
 
 app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken();
