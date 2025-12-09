@@ -52,26 +52,21 @@ app.use(session({
 /* ===== CSRF ===== */
 const csrfProtection = csrf({ cookie: true });
 
-// CSRF 보호 적용
+// CSRF 미들웨어
 app.use((req, res, next) => {
   csrfProtection(req, res, (err) => {
-    if (err) return next(err);
-
-    // GET은 검사 없이 토큰 생성만
+    if (err) return next(err); // 잘못된 토큰이면 403 던짐
     return next();
   });
 });
 
-// EJS에서 csrfToken 변수를 사용할 수 있게 설정
+// 템플릿 전역 변수
 app.use((req, res, next) => {
   try {
-    if (req.csrfToken) {
-      res.locals.csrfToken = req.csrfToken();
-    }
+    res.locals.csrfToken = req.csrfToken ? req.csrfToken() : null;
   } catch (e) {
     res.locals.csrfToken = null;
   }
-
   res.locals.user = req.session.user || null;
   next();
 });
