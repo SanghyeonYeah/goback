@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const csrf = require('csurf');
+const passport = require('passport');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 require('dotenv').config();
@@ -48,6 +49,9 @@ app.use(session({
     sameSite: 'lax'
   }
 }));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 /* ===== CSRF ===== */
 const csrfProtection = csrf({ cookie: true });
