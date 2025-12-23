@@ -14,31 +14,33 @@
   const csrfToken = getCsrfToken();
 
   async function fetchWithCSRF(url, options = {}) {
-    options = options || {};
-    options.headers = options.headers || {};
+  options.headers = options.headers || {};
 
-    // 기본으로 JSON
-    if (!(options.body instanceof FormData)) {
-      options.headers['Content-Type'] = options.headers['Content-Type'] || 'application/json';
-    }
+  if (!(options.body instanceof FormData)) {
+    options.headers['Content-Type'] =
+      options.headers['Content-Type'] || 'application/json';
+  }
 
-    // CSRF 토큰을 header로 첨부 (csurf가 header 'x-csrf-token' 또는 'x-xsrf-token'을 허용)
-    if (csrfToken) {
-      options.headers['x-csrf-token'] = csrfToken;
-      options.headers['x-xsrf-token'] = csrfToken;
-    }
+  if (csrfToken) {
+    options.headers['x-csrf-token'] = csrfToken;
+    options.headers['x-xsrf-token'] = csrfToken;
+  }
 
-    const res = await fetch(url, options);
-    // 자동 에러 표시 (JSON이면 메시지 읽음)
-    if (!res.ok) {
-      let text;
-      try { text = await res.json(); } catch (e) { text = await res.text(); }
-      throw { status: res.status, body: text };
-    }
-    // try parse json
-    const ct = res.headers.get('content-type') || '';
-    if (ct.includes('application/json')) return res.json();
-    return res.text();
+  const res = await fetch(url, {
+    ...options,
+    credentials: 'include'
+  });
+
+  if (!res.ok) {
+    let text;
+    try { text = await res.json(); }
+    catch { text = await res.text(); }
+    throw { status: res.status, body: text };
+  }
+
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  return res.text();
   }
 
   // 간단한 토스트 (DOM에 #toast-container 생성)
