@@ -43,21 +43,20 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production', // HTTPS일 때만 true
     httpOnly: true,
-    sameSite: 'lax'
+    sameSite: 'none', // cross-site AJAX 허용
   }
 }));
 
 /* ===== CSRF ===== */
-const csrfProtection = csrf({ cookie: true });
+const csrfProtection = csrf(); // 세션 기반
+app.use(csrfProtection);
 
-// CSRF 미들웨어
 app.use((req, res, next) => {
-  csrfProtection(req, res, (err) => {
-    if (err) return next(err); // 잘못된 토큰이면 403 던짐
-    return next();
-  });
+  res.locals.csrfToken = req.csrfToken();
+  res.locals.user = req.session.user || null;
+  next();
 });
 
 // 템플릿 전역 변수
