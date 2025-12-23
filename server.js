@@ -11,17 +11,23 @@ const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const { Pool } = require('pg');
+
+const app = express();
+
+// PostgreSQL 연결 (에러 처리 추가)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-const app = express();
+pool.on('error', (err) => {
+  console.error('PostgreSQL 연결 오류:', err);
+});
 
 /* ===== 보안 설정 ===== */
 app.set('trust proxy', 1);
 app.use(helmet({
-  contentSecurityPolicy: false // EJS 사용시 필요
+  contentSecurityPolicy: false
 }));
 app.use(compression());
 app.use(morgan('combined'));
@@ -41,21 +47,18 @@ app.set('views', path.join(__dirname, 'views'));
 /* ===== Session ===== */
 app.use(session({
   name: 'studyplanner.sid',
-  secret: process.env.SESSION_SECRET || 'railway-secret',
+  secret: process.env.SESSION_SECRET || 'railway-secret-change-this',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24시간
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
-/* ===== CSRF ===== */
-const csrfProtection = csrf({ cookie: false }); // 세션 기반으로 변경
-
-// 템플릿 전역 변수
+/* ===== 템플릿 전역 변수 ===== */
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   next();
@@ -72,19 +75,46 @@ const loginLimiter = rateLimit({
   max: 5 
 });
 
+/* ===== CSRF Protection (POST/PUT/DELETE만) ===== */
+const csrfProtection = csrf({ cookie: false });
+
+// CSRF 토큰 생성 미들웨어 (GET 요청용 - 세션 확인)
+const generateCsrfToken = (req, res, next) => {
+  try {
+    if (req.session && req.session.user) {
+      res.locals.csrfToken = req.csrfToken();
+    } else {
+      res.locals.csrfToken = null;
+    }
+  } catch (err) {
+    res.locals.csrfToken = null;
+  }
+  next();
+};
+
 /* ===== Helper Functions ===== */
 async function getUserByUsername(username) {
-  const result = await pool.query(
-    'SELECT * FROM users WHERE username = $1',
-    [username]
-  );
-  return result.rows[0];
+  try {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
+      [username]
+    );
+    return result.rows[0];
+  } catch (err) {
+    console.error('DB 조회 오류:', err);
+    throw err;
+  }
 }
 
-/* ===== Auth Routes (인라인) ===== */
-app.get('/auth/login', csrfProtection, (req, res) => {
-  if (req.session.user) return res.redirect('/home');
-  res.render('login', { csrfToken: req.csrfToken() });
+/* ===== Auth Routes ===== */
+app.get('/auth/login', csrfProtection, generateCsrfToken, (req, res) => {
+  try {
+    if (req.session.user) return res.redirect('/home');
+    res.render('login', { csrfToken: res.locals.csrfToken });
+  } catch (err) {
+    console.error('로그인 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
 });
 
 app.post('/auth/login', loginLimiter, csrfProtection, async (req, res) => {
@@ -110,25 +140,17 @@ app.post('/auth/login', loginLimiter, csrfProtection, async (req, res) => {
     
     return res.json({ success: true, redirect: '/home' });
   } catch (err) {
-    console.error(err);
+    console.error('로그인 오류:', err);
     return res.json({ error: '로그인 중 서버 오류가 발생했습니다.' });
   }
 });
 
 app.get('/auth/logout', (req, res) => {
   req.session.destroy((err) => {
-    if (err) console.error(err);
+    if (err) console.error('로그아웃 오류:', err);
     res.redirect('/auth/login');
   });
 });
-
-/* ===== Routes (외부 라우터가 있다면 활성화) ===== */
-// app.use('/api/todo', apiLimiter, require('./routes/todo'));
-// app.use('/api/problem', apiLimiter, require('./routes/problem'));
-// app.use('/api/ranking', apiLimiter, require('./routes/ranking'));
-// app.use('/api/pvp', apiLimiter, require('./routes/pvp'));
-// app.use('/admin', require('./routes/admin'));
-// app.use('/user', require('./routes/user'));
 
 /* ===== 메인 페이지 ===== */
 app.get('/', (req, res) => {
@@ -136,23 +158,28 @@ app.get('/', (req, res) => {
   res.redirect('/home');
 });
 
-app.get('/home', csrfProtection, (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
-  
-  res.render('home', { 
-    user: req.session.user,
-    csrfToken: req.csrfToken(),
-    dday: 0,
-    season: null,
-    todos: { total: 0, completed: 0 },
-    seasonRanking: [],
-    dailyRanking: [],
-    todayTodos: []
-  });
+app.get('/home', csrfProtection, generateCsrfToken, (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    res.render('home', { 
+      user: req.session.user,
+      csrfToken: res.locals.csrfToken,
+      dday: 0,
+      season: null,
+      todos: { total: 0, completed: 0 },
+      seasonRanking: [],
+      dailyRanking: [],
+      todayTodos: []
+    });
+  } catch (err) {
+    console.error('홈 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
 });
 
 /* ===== Todo ===== */
-app.get('/todo', csrfProtection, async (req, res) => {
+app.get('/todo', csrfProtection, generateCsrfToken, async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
     
@@ -167,61 +194,100 @@ app.get('/todo', csrfProtection, async (req, res) => {
     
     res.render('todo', { 
       todos: result.rows,
-      csrfToken: req.csrfToken()
+      csrfToken: res.locals.csrfToken
     });
   } catch (err) {
-    console.error(err);
+    console.error('Todo 페이지 오류:', err);
     res.render('todo', { 
       todos: [],
-      csrfToken: req.csrfToken()
+      csrfToken: null
     });
   }
 });
 
 /* ===== Calendar ===== */
-app.get('/calendar', csrfProtection, (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
-  
-  const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  
-  res.render('calendar', { 
-    user: req.session.user,
-    currentMonth,
-    csrfToken: req.csrfToken()
-  });
+app.get('/calendar', csrfProtection, generateCsrfToken, (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    res.render('calendar', { 
+      user: req.session.user,
+      currentMonth,
+      csrfToken: res.locals.csrfToken
+    });
+  } catch (err) {
+    console.error('캘린더 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
 });
 
 /* ===== Ranking ===== */
-app.get('/ranking', csrfProtection, (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
-  
-  res.render('ranking', { 
-    user: req.session.user,
-    csrfToken: req.csrfToken()
-  });
+app.get('/ranking', csrfProtection, generateCsrfToken, (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    res.render('ranking', { 
+      user: req.session.user,
+      csrfToken: res.locals.csrfToken
+    });
+  } catch (err) {
+    console.error('랭킹 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
 });
 
 /* ===== Problem ===== */
-app.get('/problem', csrfProtection, (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
-  
-  res.render('problem', { 
-    user: req.session.user,
-    stats: { totalSolved: 0, correctRate: 0, streak: 0 },
-    csrfToken: req.csrfToken()
-  });
+app.get('/problem', csrfProtection, generateCsrfToken, (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    res.render('problem', { 
+      user: req.session.user,
+      stats: { totalSolved: 0, correctRate: 0, streak: 0 },
+      csrfToken: res.locals.csrfToken
+    });
+  } catch (err) {
+    console.error('문제 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
 });
 
 /* ===== PVP ===== */
-app.get('/pvp', csrfProtection, (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
-  
-  res.render('pvp', { 
-    user: req.session.user,
-    match: null,
-    csrfToken: req.csrfToken()
-  });
+app.get('/pvp', csrfProtection, generateCsrfToken, (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    res.render('pvp', { 
+      user: req.session.user,
+      match: null,
+      csrfToken: res.locals.csrfToken
+    });
+  } catch (err) {
+    console.error('PVP 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
+});
+
+/* ===== API Routes (POST/PUT/DELETE에만 CSRF 적용) ===== */
+// 예시: Todo API
+app.post('/api/todo', apiLimiter, csrfProtection, async (req, res) => {
+  try {
+    if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
+    
+    // Todo 생성 로직
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Todo 생성 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+/* ===== Health Check (Railway용) ===== */
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
 
 /* ===== 404 ===== */
@@ -231,7 +297,7 @@ app.use((req, res) => {
 
 /* ===== Error Handler ===== */
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('서버 오류:', err.stack);
   
   if (err.code === 'EBADCSRFTOKEN') {
     return res.status(403).send('세션이 만료되었습니다. 페이지를 새로고침해주세요.');
@@ -243,8 +309,10 @@ app.use((err, req, res, next) => {
 /* ===== Start Server ===== */
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
+  console.log(`📍 환경: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🗄️ DB 연결: ${process.env.DATABASE_URL ? '설정됨' : '미설정'}`);
 });
 
 module.exports = { app, pool };
