@@ -244,8 +244,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`✅ Railway 서버 실행 중: ${PORT}`);
-  console.log(`🔗 http://localhost:${PORT}`);
+  console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
 });
 
 module.exports = { app, pool };
