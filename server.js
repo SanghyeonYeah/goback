@@ -14,7 +14,7 @@ const { Pool } = require('pg');
 
 const app = express();
 
-// PostgreSQL 연결 (에러 처리 추가)
+// PostgreSQL 연결
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -51,9 +51,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true, // 프로덕션 환경 (HTTPS)
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
@@ -78,18 +78,16 @@ const loginLimiter = rateLimit({
 /* ===== CSRF Protection (POST/PUT/DELETE만) ===== */
 const csrfProtection = csrf({ cookie: false });
 
-// CSRF 토큰 생성 미들웨어 (GET 요청용 - 세션 확인)
-const generateCsrfToken = (req, res, next) => {
+// CSRF 토큰 생성 헬퍼 (GET 페이지용)
+const generateCsrfToken = (req) => {
   try {
     if (req.session && req.session.user) {
-      res.locals.csrfToken = req.csrfToken();
-    } else {
-      res.locals.csrfToken = null;
+      return req.csrfToken();
     }
+    return null;
   } catch (err) {
-    res.locals.csrfToken = null;
+    return null;
   }
-  next();
 };
 
 /* ===== Helper Functions ===== */
@@ -107,16 +105,21 @@ async function getUserByUsername(username) {
 }
 
 /* ===== Auth Routes ===== */
-app.get('/auth/login', csrfProtection, generateCsrfToken, (req, res) => {
+// GET: CSRF 미들웨어 없이 토큰만 생성
+app.get('/auth/login', (req, res) => {
   try {
     if (req.session.user) return res.redirect('/home');
-    res.render('login', { csrfToken: res.locals.csrfToken });
+    
+    // 로그인 페이지는 세션 없어도 토큰 필요 (POST 요청용)
+    const csrfToken = generateCsrfToken(req);
+    res.render('login', { csrfToken });
   } catch (err) {
     console.error('로그인 페이지 오류:', err);
     res.status(500).send('페이지 로드 오류');
   }
 });
 
+// POST: CSRF 검증 적용
 app.post('/auth/login', loginLimiter, csrfProtection, async (req, res) => {
   const { username, password } = req.body;
   
@@ -158,13 +161,15 @@ app.get('/', (req, res) => {
   res.redirect('/home');
 });
 
-app.get('/home', csrfProtection, generateCsrfToken, (req, res) => {
+app.get('/home', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
     
+    const csrfToken = generateCsrfToken(req);
+    
     res.render('home', { 
       user: req.session.user,
-      csrfToken: res.locals.csrfToken,
+      csrfToken,
       dday: 0,
       season: null,
       todos: { total: 0, completed: 0 },
@@ -179,11 +184,13 @@ app.get('/home', csrfProtection, generateCsrfToken, (req, res) => {
 });
 
 /* ===== Todo ===== */
-app.get('/todo', csrfProtection, generateCsrfToken, async (req, res) => {
+app.get('/todo', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
     
     const userId = req.session.user.id;
+    const csrfToken = generateCsrfToken(req);
+    
     const result = await pool.query(
       `SELECT id, subject, task, completed 
        FROM todos 
@@ -194,85 +201,18 @@ app.get('/todo', csrfProtection, generateCsrfToken, async (req, res) => {
     
     res.render('todo', { 
       todos: result.rows,
-      csrfToken: res.locals.csrfToken
+      csrfToken
     });
   } catch (err) {
     console.error('Todo 페이지 오류:', err);
+    const csrfToken = generateCsrfToken(req);
     res.render('todo', { 
       todos: [],
-      csrfToken: null
+      csrfToken
     });
   }
 });
 
-/* ===== Calendar ===== */
-app.get('/calendar', csrfProtection, generateCsrfToken, (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    
-    res.render('calendar', { 
-      user: req.session.user,
-      currentMonth,
-      csrfToken: res.locals.csrfToken
-    });
-  } catch (err) {
-    console.error('캘린더 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
-});
-
-/* ===== Ranking ===== */
-app.get('/ranking', csrfProtection, generateCsrfToken, (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    res.render('ranking', { 
-      user: req.session.user,
-      csrfToken: res.locals.csrfToken
-    });
-  } catch (err) {
-    console.error('랭킹 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
-});
-
-/* ===== Problem ===== */
-app.get('/problem', csrfProtection, generateCsrfToken, (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    res.render('problem', { 
-      user: req.session.user,
-      stats: { totalSolved: 0, correctRate: 0, streak: 0 },
-      csrfToken: res.locals.csrfToken
-    });
-  } catch (err) {
-    console.error('문제 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
-});
-
-/* ===== PVP ===== */
-app.get('/pvp', csrfProtection, generateCsrfToken, (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    res.render('pvp', { 
-      user: req.session.user,
-      match: null,
-      csrfToken: res.locals.csrfToken
-    });
-  } catch (err) {
-    console.error('PVP 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
-});
-
-/* ===== API Routes (POST/PUT/DELETE에만 CSRF 적용) ===== */
-// 예시: Todo API
 app.post('/api/todo', apiLimiter, csrfProtection, async (req, res) => {
   try {
     if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
@@ -282,6 +222,103 @@ app.post('/api/todo', apiLimiter, csrfProtection, async (req, res) => {
   } catch (err) {
     console.error('Todo 생성 오류:', err);
     res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+app.put('/api/todo/:id', apiLimiter, csrfProtection, async (req, res) => {
+  try {
+    if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
+    
+    // Todo 수정 로직
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Todo 수정 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+app.delete('/api/todo/:id', apiLimiter, csrfProtection, async (req, res) => {
+  try {
+    if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
+    
+    // Todo 삭제 로직
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Todo 삭제 오류:', err);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+/* ===== Calendar ===== */
+app.get('/calendar', async (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const csrfToken = generateCsrfToken(req);
+    
+    res.render('calendar', { 
+      user: req.session.user,
+      currentMonth,
+      csrfToken
+    });
+  } catch (err) {
+    console.error('캘린더 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
+});
+
+/* ===== Ranking ===== */
+app.get('/ranking', async (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    const csrfToken = generateCsrfToken(req);
+    
+    res.render('ranking', { 
+      user: req.session.user,
+      csrfToken
+    });
+  } catch (err) {
+    console.error('랭킹 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
+});
+
+/* ===== Problem ===== */
+app.get('/problem', async (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    const csrfToken = generateCsrfToken(req);
+    
+    res.render('problem', { 
+      user: req.session.user,
+      stats: { totalSolved: 0, correctRate: 0, streak: 0 },
+      csrfToken
+    });
+  } catch (err) {
+    console.error('문제 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
+});
+
+/* ===== PVP ===== */
+app.get('/pvp', async (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    
+    const csrfToken = generateCsrfToken(req);
+    
+    res.render('pvp', { 
+      user: req.session.user,
+      match: null,
+      csrfToken
+    });
+  } catch (err) {
+    console.error('PVP 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
   }
 });
 
@@ -306,13 +343,26 @@ app.use((err, req, res, next) => {
   res.status(500).send('서버 오류가 발생했습니다.');
 });
 
-/* ===== Start Server ===== */
+/* ===== DB 연결 테스트 후 서버 시작 ===== */
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
-  console.log(`📍 환경: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🗄️ DB 연결: ${process.env.DATABASE_URL ? '설정됨' : '미설정'}`);
-});
+async function startServer() {
+  try {
+    // DB 연결 테스트
+    await pool.query('SELECT NOW()');
+    console.log('✅ DB 연결 성공');
+    
+    // 서버 시작
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
+      console.log(`📍 환경: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (err) {
+    console.error('❌ 서버 시작 실패:', err);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 module.exports = { app, pool };
