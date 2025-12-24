@@ -1,368 +1,378 @@
 const express = require('express');
-const path = require('path');
-const session = require('express-session');
-const helmet = require('helmet');
-const compression = require('compression');
-const cookieParser = require('cookie-parser');
-const csrf = require('csurf');
-const rateLimit = require('express-rate-limit');
-const morgan = require('morgan');
+const router = express.Router();
 const bcrypt = require('bcrypt');
-require('dotenv').config();
+const { body, validationResult } = require('express-validator');
+const pool = require('../database/init');
+const csrf = require('csurf');
+const fetch = require('node-fetch');
+const { OAuth2Client } = require('google-auth-library');
 
-const { Pool } = require('pg');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const app = express();
-
-// PostgreSQL 연결
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
-
-pool.on('error', (err) => {
-  console.error('PostgreSQL 연결 오류:', err);
-});
-
-/* ===== 보안 설정 ===== */
-app.set('trust proxy', 1);
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
-app.use(compression());
-app.use(morgan('combined'));
-
-/* ===== Body Parser ===== */
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cookieParser());
-
-/* ===== 정적 파일 ===== */
-app.use(express.static(path.join(__dirname, 'public')));
-
-/* ===== View Engine ===== */
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-/* ===== Session ===== */
-app.use(session({
-  name: 'studyplanner.sid',
-  secret: process.env.SESSION_SECRET || 'railway-secret-change-this',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: true, // 프로덕션 환경 (HTTPS)
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
-
-/* ===== 템플릿 전역 변수 ===== */
-app.use((req, res, next) => {
-  res.locals.user = req.session.user || null;
-  next();
-});
-
-/* ===== Rate Limit ===== */
-const apiLimiter = rateLimit({ 
-  windowMs: 15 * 60 * 1000, 
-  max: 100 
-});
-
-const loginLimiter = rateLimit({ 
-  windowMs: 15 * 60 * 1000, 
-  max: 5 
-});
-
-/* ===== CSRF Protection (POST/PUT/DELETE만) ===== */
+// CSRF 보호 미들웨어 (선택적 적용)
 const csrfProtection = csrf({ cookie: false });
 
-// CSRF 토큰 생성 헬퍼 (GET 페이지용)
-const generateCsrfToken = (req) => {
-  try {
-    if (req.session && req.session.user) {
-      return req.csrfToken();
-    }
-    return null;
-  } catch (err) {
-    return null;
+/* ================================
+   로그인 페이지
+================================ */
+router.get('/login', (req, res) => {
+  if (req.session.user) {
+    return res.redirect('/home');
   }
-};
 
-/* ===== Helper Functions ===== */
-async function getUserByUsername(username) {
-  try {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE username = $1',
-      [username]
-    );
-    return result.rows[0];
-  } catch (err) {
-    console.error('DB 조회 오류:', err);
-    throw err;
-  }
-}
-
-/* ===== Auth Routes ===== */
-// GET: CSRF 미들웨어 없이 토큰만 생성
-app.get('/auth/login', (req, res) => {
-  try {
-    if (req.session.user) return res.redirect('/home');
-    
-    // 로그인 페이지는 세션 없어도 토큰 필요 (POST 요청용)
-    const csrfToken = generateCsrfToken(req);
-    res.render('login', { csrfToken });
-  } catch (err) {
-    console.error('로그인 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
+  res.render('login', {
+    error: null,
+    csrfToken: null // GET 페이지는 CSRF 불필요
+  });
 });
 
-// POST: CSRF 검증 적용
-app.post('/auth/login', loginLimiter, csrfProtection, async (req, res) => {
-  const { username, password } = req.body;
-  
-  try {
-    const user = await getUserByUsername(username);
-    
-    if (!user) {
-      return res.json({ error: '사용자를 찾을 수 없습니다.' });
-    }
-    
-    const match = await bcrypt.compare(password, user.password);
-    
-    if (!match) {
-      return res.json({ error: '비밀번호가 틀렸습니다.' });
-    }
-    
-    req.session.user = { 
-      id: user.id, 
-      name: user.username 
-    };
-    
-    return res.json({ success: true, redirect: '/home' });
-  } catch (err) {
-    console.error('로그인 오류:', err);
-    return res.json({ error: '로그인 중 서버 오류가 발생했습니다.' });
-  }
+/* ================================
+   회원가입 페이지
+================================ */
+router.get('/register', (req, res) => {
+  res.render('register', {
+    error: null,
+    csrfToken: null
+  });
 });
 
-app.get('/auth/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) console.error('로그아웃 오류:', err);
+/* ================================
+   로그아웃
+================================ */
+router.get('/logout', (req, res) => {
+  req.session.destroy(() => {
     res.redirect('/auth/login');
   });
 });
 
-/* ===== 메인 페이지 ===== */
-app.get('/', (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
-  res.redirect('/home');
-});
-
-app.get('/home', async (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    const csrfToken = generateCsrfToken(req);
-    
-    res.render('home', { 
-      user: req.session.user,
-      csrfToken,
-      dday: 0,
-      season: null,
-      todos: { total: 0, completed: 0 },
-      seasonRanking: [],
-      dailyRanking: [],
-      todayTodos: []
+/* ================================
+   일반 로그인 (CSRF 적용)
+================================ */
+router.post('/login', csrfProtection, [
+  body('username').trim().notEmpty().withMessage('아이디를 입력하세요'),
+  body('password').notEmpty().withMessage('비밀번호를 입력하세요')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.json({
+      success: false,
+      error: errors.array()[0].msg
     });
-  } catch (err) {
-    console.error('홈 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
   }
-});
 
-/* ===== Todo ===== */
-app.get('/todo', async (req, res) => {
+  const { username, password } = req.body;
+
   try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    const userId = req.session.user.id;
-    const csrfToken = generateCsrfToken(req);
-    
     const result = await pool.query(
-      `SELECT id, subject, task, completed 
-       FROM todos 
-       WHERE user_id = $1 AND date = CURRENT_DATE 
-       ORDER BY created_at ASC`,
-      [userId]
+      `SELECT id, username, email, password_hash, student_id, diploma, grade 
+       FROM users 
+       WHERE username = $1`,
+      [username]
     );
-    
-    res.render('todo', { 
-      todos: result.rows,
-      csrfToken
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: false,
+        error: '아이디 또는 비밀번호가 올바르지 않습니다.'
+      });
+    }
+
+    const user = result.rows[0];
+    const isValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!isValid) {
+      return res.json({
+        success: false,
+        error: '아이디 또는 비밀번호가 올바르지 않습니다.'
+      });
+    }
+
+    req.session.user = user;
+
+    await pool.query(
+      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+      [user.id]
+    );
+
+    res.json({
+      success: true,
+      redirect: '/home'
     });
   } catch (err) {
-    console.error('Todo 페이지 오류:', err);
-    const csrfToken = generateCsrfToken(req);
-    res.render('todo', { 
-      todos: [],
-      csrfToken
+    console.error(err);
+    res.json({
+      success: false,
+      error: '로그인 중 오류가 발생했습니다.'
     });
   }
 });
 
-app.post('/api/todo', apiLimiter, csrfProtection, async (req, res) => {
+/* ================================
+   GOOGLE OAUTH2 — 인증 페이지 이동 (CSRF 제외)
+================================ */
+router.get('/google', (req, res) => {
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI ||
+    'http://localhost:3000/auth/google/callback';
+
+  // state 파라미터로 CSRF 보호
+  const state = Math.random().toString(36).substring(7);
+  req.session.oauthState = state;
+
+  const authUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${process.env.GOOGLE_CLIENT_ID}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=openid%20email%20profile` +
+    `&hd=cnsa.hs.kr` +
+    `&state=${state}`;
+
+  res.redirect(authUrl);
+});
+
+/* ================================
+   GOOGLE OAUTH2 — 콜백 (CSRF 제외)
+================================ */
+router.get('/google/callback', async (req, res) => {
+  const { code, state } = req.query;
+
+  // State 검증으로 CSRF 보호
+  if (!code || !state || state !== req.session.oauthState) {
+    return res.redirect('/auth/login?error=invalid_state');
+  }
+
+  delete req.session.oauthState;
+
   try {
-    if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
-    
-    // Todo 생성 로직
-    res.json({ success: true });
+    const redirectUri =
+      process.env.GOOGLE_REDIRECT_URI ||
+      'http://localhost:3000/auth/google/callback';
+
+    // 구글 토큰 교환
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+      })
+    });
+
+    const tokens = await tokenRes.json();
+
+    if (tokens.error) {
+      console.error('Google OAuth Error:', tokens);
+      return res.redirect('/auth/login?error=oauth_failed');
+    }
+
+    // ID Token 검증
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const googleId = payload.sub;
+
+    // 도메인 확인
+    if (!email.endsWith('@cnsa.hs.kr')) {
+      return res.redirect('/auth/login?error=invalid_domain');
+    }
+
+    // 기존 유저 확인
+    const userCheck = await pool.query(
+      `SELECT id, username, email, student_id, diploma, grade 
+       FROM users WHERE google_id=$1 OR email=$2`,
+      [googleId, email]
+    );
+
+    // 이미 존재 → 바로 로그인
+    if (userCheck.rows.length > 0) {
+      const user = userCheck.rows[0];
+
+      req.session.user = user;
+
+      await pool.query(
+        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id=$1',
+        [user.id]
+      );
+
+      return res.redirect('/home');
+    }
+
+    // 신규 사용자 → 구글 정보 저장 후 추가정보 입력 페이지로
+    req.session.pendingGoogleAuth = {
+      email,
+      googleId,
+      name: payload.name
+    };
+
+    return res.redirect('/auth/complete-registration');
   } catch (err) {
-    console.error('Todo 생성 오류:', err);
-    res.status(500).json({ error: '서버 오류' });
+    console.error('Google 인증 오류:', err);
+    res.redirect('/auth/login?error=server_error');
   }
 });
 
-app.put('/api/todo/:id', apiLimiter, csrfProtection, async (req, res) => {
-  try {
-    if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
-    
-    // Todo 수정 로직
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Todo 수정 오류:', err);
-    res.status(500).json({ error: '서버 오류' });
+/* ================================
+   구글 OAuth 후 추가 회원가입 페이지
+================================ */
+router.get('/complete-registration', (req, res) => {
+  if (!req.session.pendingGoogleAuth) {
+    return res.redirect('/auth/register');
   }
+
+  res.render('complete-registration', {
+    email: req.session.pendingGoogleAuth.email,
+    error: null,
+    csrfToken: null
+  });
 });
 
-app.delete('/api/todo/:id', apiLimiter, csrfProtection, async (req, res) => {
-  try {
-    if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
-    
-    // Todo 삭제 로직
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Todo 삭제 오류:', err);
-    res.status(500).json({ error: '서버 오류' });
-  }
-});
+/* ================================
+   구글 OAuth 후 회원가입 처리 (CSRF 적용)
+================================ */
+router.post(
+  '/complete-registration',
+  csrfProtection,
+  [
+    body('username')
+      .trim()
+      .isLength({ min: 3, max: 20 })
+      .withMessage('아이디는 3~20자입니다.'),
+    body('password')
+      .isLength({ min: 8 })
+      .withMessage('비밀번호는 최소 8자 이상입니다.'),
+    body('student_id').notEmpty().withMessage('학번을 입력하세요'),
+    body('diploma').notEmpty().withMessage('디플로마를 선택하세요')
+  ],
+  async (req, res) => {
+    if (!req.session.pendingGoogleAuth) {
+      return res.json({
+        success: false,
+        error: '세션이 만료되었습니다.'
+      });
+    }
 
-/* ===== Calendar ===== */
-app.get('/calendar', async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.json({
+        success: false,
+        error: errors.array()[0].msg
+      });
+    }
+
+    const { username, password, student_id, diploma } = req.body;
+    const { email, googleId } = req.session.pendingGoogleAuth;
+
+    try {
+      // 중복 검사
+      const dupe = await pool.query(
+        `SELECT id FROM users WHERE username=$1 OR student_id=$2`,
+        [username, student_id]
+      );
+
+      if (dupe.rows.length > 0) {
+        return res.json({
+          success: false,
+          error: '이미 존재하는 아이디 또는 학번입니다.'
+        });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      const insert = await pool.query(
+        `INSERT INTO users (username, email, password_hash, student_id, diploma, google_id, grade)
+         VALUES ($1, $2, $3, $4, $5, $6, 1)
+         RETURNING id, username, email, student_id, diploma, grade`,
+        [username, email, passwordHash, student_id, diploma, googleId]
+      );
+
+      const user = insert.rows[0];
+
+      req.session.user = user;
+
+      delete req.session.pendingGoogleAuth;
+
+      res.json({
+        success: true,
+        redirect: '/home'
+      });
+    } catch (err) {
+      console.error(err);
+      res.json({
+        success: false,
+        error: '회원가입 중 오류 발생'
+      });
+    }
+  }
+);
+
+/* ================================
+   일반 회원가입 (CSRF 적용)
+================================ */
+router.post('/register', csrfProtection, [
+  body('username').trim().isLength({ min: 3, max: 20 }).withMessage('아이디는 3-20자여야 합니다'),
+  body('email').isEmail().withMessage('올바른 이메일을 입력하세요'),
+  body('password').isLength({ min: 8 }).withMessage('비밀번호는 최소 8자 이상이어야 합니다'),
+  body('student_id').notEmpty().withMessage('학번을 입력하세요'),
+  body('diploma').notEmpty().withMessage('디플로마를 선택하세요')
+], async (req, res) => {
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.json({
+      success: false,
+      error: errors.array()[0].msg
+    });
+  }
+
+  const { username, email, password, student_id, diploma } = req.body;
+
+  if (!email.endsWith('@cnsa.hs.kr')) {
+    return res.json({
+      success: false,
+      error: '학교 이메일(@cnsa.hs.kr)만 사용할 수 있습니다.'
+    });
+  }
+
   try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    const csrfToken = generateCsrfToken(req);
-    
-    res.render('calendar', { 
-      user: req.session.user,
-      currentMonth,
-      csrfToken
+    const dupe = await pool.query(
+      `SELECT id FROM users WHERE username=$1 OR email=$2 OR student_id=$3`,
+      [username, email, student_id]
+    );
+
+    if (dupe.rows.length > 0) {
+      return res.json({
+        success: false,
+        error: '이미 존재하는 아이디, 이메일 또는 학번입니다.'
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await pool.query(
+      `INSERT INTO users (username, email, password_hash, student_id, diploma, grade)
+       VALUES ($1, $2, $3, $4, $5, 1)`,
+      [username, email, passwordHash, student_id, diploma]
+    );
+
+    res.json({
+      success: true,
+      redirect: '/auth/login'
     });
   } catch (err) {
-    console.error('캘린더 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
-});
-
-/* ===== Ranking ===== */
-app.get('/ranking', async (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    const csrfToken = generateCsrfToken(req);
-    
-    res.render('ranking', { 
-      user: req.session.user,
-      csrfToken
+    console.error(err);
+    res.json({
+      success: false,
+      error: '회원가입 중 오류 발생'
     });
-  } catch (err) {
-    console.error('랭킹 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
   }
 });
 
-/* ===== Problem ===== */
-app.get('/problem', async (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    const csrfToken = generateCsrfToken(req);
-    
-    res.render('problem', { 
-      user: req.session.user,
-      stats: { totalSolved: 0, correctRate: 0, streak: 0 },
-      csrfToken
-    });
-  } catch (err) {
-    console.error('문제 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
-});
-
-/* ===== PVP ===== */
-app.get('/pvp', async (req, res) => {
-  try {
-    if (!req.session.user) return res.redirect('/auth/login');
-    
-    const csrfToken = generateCsrfToken(req);
-    
-    res.render('pvp', { 
-      user: req.session.user,
-      match: null,
-      csrfToken
-    });
-  } catch (err) {
-    console.error('PVP 페이지 오류:', err);
-    res.status(500).send('페이지 로드 오류');
-  }
-});
-
-/* ===== Health Check (Railway용) ===== */
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
-
-/* ===== 404 ===== */
-app.use((req, res) => {
-  res.status(404).send('페이지를 찾을 수 없습니다.');
-});
-
-/* ===== Error Handler ===== */
-app.use((err, req, res, next) => {
-  console.error('서버 오류:', err.stack);
-  
-  if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).send('세션이 만료되었습니다. 페이지를 새로고침해주세요.');
-  }
-  
-  res.status(500).send('서버 오류가 발생했습니다.');
-});
-
-/* ===== DB 연결 테스트 후 서버 시작 ===== */
-const PORT = process.env.PORT || 8080;
-
-async function startServer() {
-  try {
-    // DB 연결 테스트
-    await pool.query('SELECT NOW()');
-    console.log('✅ DB 연결 성공');
-    
-    // 서버 시작
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
-      console.log(`📍 환경: ${process.env.NODE_ENV || 'development'}`);
-    });
-  } catch (err) {
-    console.error('❌ 서버 시작 실패:', err);
-    process.exit(1);
-  }
-}
-
-startServer();
-
-module.exports = { app, pool };
+module.exports = router;
