@@ -3,19 +3,28 @@ const router = express.Router();
 const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const pool = require('../database/init');
-const csrf = require('csurf');
-const csrfProtection = csrf();
 const fetch = require('node-fetch');
 const { OAuth2Client } = require('google-auth-library');
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// CSRF를 조건부로만 적용
+let csrfProtection;
+try {
+  const csrf = require('csurf');
+  csrfProtection = csrf({ cookie: true });
+} catch (err) {
+  console.log('⚠️ CSRF 비활성화');
+  csrfProtection = (req, res, next) => {
+    req.csrfToken = () => 'disabled';
+    next();
+  };
+}
 
-router.use(csrfProtection);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /* ================================
    로그인 페이지
 ================================ */
-router.get('/login', (req, res) => {
+router.get('/login', csrfProtection, (req, res) => {
   if (req.session.user) {
     return res.redirect('/home');
   }
@@ -29,7 +38,7 @@ router.get('/login', (req, res) => {
 /* ================================
    회원가입 페이지
 ================================ */
-router.get('/register', (req, res) => {
+router.get('/register', csrfProtection, (req, res) => {
   res.render('register', {
     error: null,
     csrfToken: req.csrfToken()
@@ -48,7 +57,7 @@ router.get('/logout', (req, res) => {
 /* ================================
    일반 로그인
 ================================ */
-router.post('/login', [
+router.post('/login', csrfProtection, [
   body('username').trim().notEmpty().withMessage('아이디를 입력하세요'),
   body('password').notEmpty().withMessage('비밀번호를 입력하세요')
 ], async (req, res) => {
@@ -105,7 +114,7 @@ router.post('/login', [
 });
 
 /* ================================
-   GOOGLE OAUTH2 — 인증 페이지 이동
+   GOOGLE OAUTH2 – 인증 페이지 이동
 ================================ */
 router.get('/google', (req, res) => {
   const redirectUri =
@@ -124,7 +133,7 @@ router.get('/google', (req, res) => {
 });
 
 /* ================================
-   GOOGLE OAUTH2 — 콜백
+   GOOGLE OAUTH2 – 콜백
 ================================ */
 router.get('/google/callback', async (req, res) => {
   const { code } = req.query;
@@ -153,10 +162,7 @@ router.get('/google/callback', async (req, res) => {
 
     if (tokens.error) {
       console.error('Google OAuth Error:', tokens);
-      return res.render('login', {
-        error: 'Google 인증에 실패했습니다.',
-        csrfToken: req.csrfToken()
-      });
+      return res.redirect('/auth/login?error=google_auth_failed');
     }
 
     // ID Token 검증
@@ -171,10 +177,7 @@ router.get('/google/callback', async (req, res) => {
 
     // 도메인 확인
     if (!email.endsWith('@cnsa.hs.kr')) {
-      return res.render('login', {
-        error: '학교 계정(@cnsa.hs.kr)만 로그인할 수 있습니다.',
-        csrfToken: req.csrfToken()
-      });
+      return res.redirect('/auth/login?error=invalid_domain');
     }
 
     // 기존 유저 확인
@@ -208,17 +211,14 @@ router.get('/google/callback', async (req, res) => {
     return res.redirect('/auth/complete-registration');
   } catch (err) {
     console.error('Google 인증 오류:', err);
-    res.render('login', {
-      error: 'Google 로그인 오류가 발생했습니다.',
-      csrfToken: req.csrfToken()
-    });
+    res.redirect('/auth/login?error=google_error');
   }
 });
 
 /* ================================
    구글 OAuth 후 추가 회원가입 페이지
 ================================ */
-router.get('/complete-registration', (req, res) => {
+router.get('/complete-registration', csrfProtection, (req, res) => {
   if (!req.session.pendingGoogleAuth) {
     return res.redirect('/auth/register');
   }
@@ -235,6 +235,7 @@ router.get('/complete-registration', (req, res) => {
 ================================ */
 router.post(
   '/complete-registration',
+  csrfProtection,
   [
     body('username')
       .trim()
@@ -308,7 +309,7 @@ router.post(
 /* ================================
    일반 회원가입
 ================================ */
-router.post('/register', [
+router.post('/register', csrfProtection, [
   body('username').trim().isLength({ min: 3, max: 20 }).withMessage('아이디는 3-20자여야 합니다'),
   body('email').isEmail().withMessage('올바른 이메일을 입력하세요'),
   body('password').isLength({ min: 8 }).withMessage('비밀번호는 최소 8자 이상이어야 합니다'),
