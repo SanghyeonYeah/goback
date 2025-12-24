@@ -1,3 +1,8 @@
+// 환경변수 로드 - production에서는 Railway 변수 사용
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -237,34 +242,44 @@ app.use((err, req, res, next) => {
   res.status(500).send('서버 오류가 발생했습니다.');
 });
 
-/* ===== DB 연결 테스트 후 서버 시작 ===== */
-const PORT = process.env.PORT || 3000;
+/* ===== 서버 시작 ===== */
+const PORT = parseInt(process.env.PORT, 10) || 3000;
 
-async function startServer() {
-  // 먼저 서버를 시작
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
-    console.log(`🔍 환경: ${process.env.NODE_ENV || 'development'}`);
+console.log('='.repeat(50));
+console.log('🚀 서버 시작 시도');
+console.log('='.repeat(50));
+console.log('환경변수:');
+console.log('  PORT:', process.env.PORT, '→ 사용할 포트:', PORT);
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  DB_HOST:', process.env.DB_HOST ? '✓ 설정됨' : '✗ 미설정');
+console.log('='.repeat(50));
+
+// DB 연결 백그라운드 처리
+pool.query('SELECT NOW()')
+  .then(() => console.log('✅ PostgreSQL 연결 성공'))
+  .catch(err => console.error('⚠️ PostgreSQL 연결 실패:', err.message));
+
+// 서버 시작
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log('='.repeat(50));
+  console.log('✅ 서버 시작 완료!');
+  console.log(`   주소: 0.0.0.0:${PORT}`);
+  console.log(`   환경: ${process.env.NODE_ENV || 'development'}`);
+  console.log('='.repeat(50));
+});
+
+// 에러 처리
+server.on('error', (err) => {
+  console.error('❌ 서버 시작 실패:', err);
+  process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM 수신, 서버 종료 중...');
+  server.close(() => {
+    console.log('서버 종료 완료');
+    process.exit(0);
   });
-
-  // 그 다음 DB 연결 테스트 (비동기)
-  try {
-    const timeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('DB 연결 타임아웃')), 5000)
-    );
-    
-    await Promise.race([
-      pool.query('SELECT NOW()'),
-      timeout
-    ]);
-    
-    console.log('✅ DB 연결 성공');
-  } catch (err) {
-    console.error('⚠️ DB 연결 실패:', err.message);
-    console.log('⚠️ DB 없이 서버 계속 실행');
-  }
-}
-
-startServer();
+});
 
 module.exports = { app, pool };
