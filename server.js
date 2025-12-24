@@ -241,8 +241,14 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 async function startServer() {
+  // 먼저 서버를 시작
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
+    console.log(`🔍 환경: ${process.env.NODE_ENV || 'development'}`);
+  });
+
+  // 그 다음 DB 연결 테스트 (비동기)
   try {
-    // DB 연결 테스트 (타임아웃 추가)
     const timeout = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('DB 연결 타임아웃')), 5000)
     );
@@ -255,14 +261,8 @@ async function startServer() {
     console.log('✅ DB 연결 성공');
   } catch (err) {
     console.error('⚠️ DB 연결 실패:', err.message);
-    console.log('⚠️ DB 없이 서버 시작 (일부 기능 제한)');
+    console.log('⚠️ DB 없이 서버 계속 실행');
   }
-  
-  // 서버 시작 - DB 연결 실패해도 서버는 시작
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ 서버 실행 중: 포트 ${PORT}`);
-    console.log(`🔍 환경: ${process.env.NODE_ENV || 'development'}`);
-  });
 }
 
 startServer();
