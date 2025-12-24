@@ -1,11 +1,12 @@
 const { Pool } = require('pg');
 
-// Railway PostgreSQL 연결 정보 직접 입력
 const pool = new Pool({
-  connectionString: 'postgresql://postgres:nTdazFWkZOeezcSnhGwuvMZXnzORNQwL@postgres.railway.internal:5432/railway',
-  ssl: {
-    rejectUnauthorized: false
-  },
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432'),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false },
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
