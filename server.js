@@ -195,13 +195,34 @@ app.get('/ranking', async (req, res) => {
 app.get('/problem', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
+
+    // problems 배열 추가
+    const result = await pool.query('SELECT * FROM problems ORDER BY id ASC');
+    const problems = result.rows || [];
     
     res.render('problem', { 
       user: req.session.user,
-      stats: { totalSolved: 0, correctRate: 0, streak: 0 }
+      stats: { totalSolved: 0, correctRate: 0, streak: 0 },
+      problems
     });
   } catch (err) {
     console.error('문제 페이지 오류:', err);
+    res.status(500).send('페이지 로드 오류');
+  }
+});
+
+/* ===== Admin Dashboard ===== */
+app.get('/admin/dashboard', async (req, res) => {
+  try {
+    if (!req.session.user) return res.redirect('/auth/login');
+    // 권한 체크 예시
+    if (!req.session.user.isAdmin) return res.status(403).send('권한이 없습니다.');
+
+    res.render('admin-dashboard', {
+      user: req.session.user
+    });
+  } catch (err) {
+    console.error('관리자 대시보드 오류:', err);
     res.status(500).send('페이지 로드 오류');
   }
 });
