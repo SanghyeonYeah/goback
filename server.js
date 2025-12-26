@@ -11,17 +11,13 @@ const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
-require('dotenv').config();
-
 const pool = require('./database/init');
 
 const app = express();
 
 /* ===== 보안 설정 ===== */
 app.set('trust proxy', 1);
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(morgan('combined'));
 
@@ -58,15 +54,8 @@ app.use((req, res, next) => {
 });
 
 /* ===== Rate Limit ===== */
-const apiLimiter = rateLimit({ 
-  windowMs: 15 * 60 * 1000, 
-  max: 100 
-});
-
-const loginLimiter = rateLimit({ 
-  windowMs: 15 * 60 * 1000, 
-  max: 5 
-});
+const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5 });
 
 /* ===== 라우터 연결 ===== */
 const authRouter = require('./routes/auth');
@@ -81,7 +70,6 @@ app.get('/', (req, res) => {
 app.get('/home', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
-    
     res.render('home', { 
       user: req.session.user,
       dday: 0,
@@ -101,9 +89,7 @@ app.get('/home', async (req, res) => {
 app.get('/todo', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
-    
     const userId = req.session.user.id;
-    
     const result = await pool.query(
       `SELECT id, subject, task, completed 
        FROM todos 
@@ -111,22 +97,16 @@ app.get('/todo', async (req, res) => {
        ORDER BY created_at ASC`,
       [userId]
     );
-    
-    res.render('todo', { 
-      todos: result.rows
-    });
+    res.render('todo', { todos: result.rows });
   } catch (err) {
     console.error('Todo 페이지 오류:', err);
-    res.render('todo', { 
-      todos: []
-    });
+    res.render('todo', { todos: [] });
   }
 });
 
 app.post('/todo', apiLimiter, async (req, res) => {
   try {
     if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
-    
     // Todo 생성 로직
     res.json({ success: true });
   } catch (err) {
@@ -138,7 +118,6 @@ app.post('/todo', apiLimiter, async (req, res) => {
 app.put('/todo/:id', apiLimiter, async (req, res) => {
   try {
     if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
-    
     // Todo 수정 로직
     res.json({ success: true });
   } catch (err) {
@@ -150,7 +129,6 @@ app.put('/todo/:id', apiLimiter, async (req, res) => {
 app.delete('/todo/:id', apiLimiter, async (req, res) => {
   try {
     if (!req.session.user) return res.status(401).json({ error: '인증 필요' });
-    
     // Todo 삭제 로직
     res.json({ success: true });
   } catch (err) {
@@ -163,14 +141,9 @@ app.delete('/todo/:id', apiLimiter, async (req, res) => {
 app.get('/calendar', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
-    
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    
-    res.render('calendar', { 
-      user: req.session.user,
-      currentMonth
-    });
+    res.render('calendar', { user: req.session.user, currentMonth });
   } catch (err) {
     console.error('캘린더 페이지 오류:', err);
     res.status(500).send('페이지 로드 오류');
@@ -181,10 +154,7 @@ app.get('/calendar', async (req, res) => {
 app.get('/ranking', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
-    
-    res.render('ranking', { 
-      user: req.session.user
-    });
+    res.render('ranking', { user: req.session.user });
   } catch (err) {
     console.error('랭킹 페이지 오류:', err);
     res.status(500).send('페이지 로드 오류');
@@ -195,11 +165,8 @@ app.get('/ranking', async (req, res) => {
 app.get('/problem', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
-
-    // problems 배열 추가
     const result = await pool.query('SELECT * FROM problems ORDER BY id ASC');
     const problems = result.rows || [];
-    
     res.render('problem', { 
       user: req.session.user,
       stats: { totalSolved: 0, correctRate: 0, streak: 0 },
@@ -215,12 +182,17 @@ app.get('/problem', async (req, res) => {
 app.get('/admin/dashboard', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
-    // 권한 체크 예시
-    if (!req.session.user.isAdmin) return res.status(403).send('권한이 없습니다.');
+    
+    // admin_users 테이블 확인 후 세션에 isAdmin 플래그 추가
+    const result = await pool.query(
+      'SELECT * FROM admin_users WHERE user_id = $1',
+      [req.session.user.id]
+    );
 
-    res.render('admin-dashboard', {
-      user: req.session.user
-    });
+    if (result.rows.length === 0) return res.status(403).send('권한이 없습니다.');
+    req.session.user.isAdmin = true; // 플래그 설정
+
+    res.render('admin/dashboard', { user: req.session.user });
   } catch (err) {
     console.error('관리자 대시보드 오류:', err);
     res.status(500).send('페이지 로드 오류');
@@ -231,15 +203,17 @@ app.get('/admin/dashboard', async (req, res) => {
 app.get('/pvp', async (req, res) => {
   try {
     if (!req.session.user) return res.redirect('/auth/login');
-    
-    res.render('pvp', { 
-      user: req.session.user,
-      match: null
-    });
+    res.render('pvp', { user: req.session.user, match: null });
   } catch (err) {
     console.error('PVP 페이지 오류:', err);
     res.status(500).send('페이지 로드 오류');
   }
+});
+
+/* ===== 디버깅용 세션 확인 라우트 ===== */
+app.get('/debug/session', (req, res) => {
+  if (!req.session.user) return res.send('로그인 안 됨');
+  res.json(req.session.user);
 });
 
 /* ===== Health Check (Railway용) ===== */
@@ -255,11 +229,9 @@ app.use((req, res) => {
 /* ===== Error Handler ===== */
 app.use((err, req, res, next) => {
   console.error('서버 오류:', err.stack);
-  
   if (err.code === 'EBADCSRFTOKEN') {
     return res.status(403).send('세션이 만료되었습니다. 페이지를 새로고침해주세요.');
   }
-  
   res.status(500).send('서버 오류가 발생했습니다.');
 });
 
@@ -275,7 +247,7 @@ console.log('  NODE_ENV:', process.env.NODE_ENV);
 console.log('  DB_HOST:', process.env.DB_HOST ? '✓ 설정됨' : '✗ 미설정');
 console.log('='.repeat(50));
 
-// DB 연결 백그라운드 처리
+// DB 연결 확인
 pool.query('SELECT NOW()')
   .then(() => console.log('✅ PostgreSQL 연결 성공'))
   .catch(err => console.error('⚠️ PostgreSQL 연결 실패:', err.message));
