@@ -62,9 +62,11 @@ const authRouter = require('./routes/auth');
 app.use('/auth', authRouter);
 
 /* ===== 메인 페이지 ===== */
-app.get('/', (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
-  res.redirect('/home');
+app.get("/home", authMiddleware, (req, res) => {
+    res.render("home", {
+        user: req.user,
+        csrfToken: req.csrfToken()
+    });
 });
 
 app.get('/home', async (req, res) => {
