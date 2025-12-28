@@ -62,6 +62,11 @@ const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 /* ===== Auth Router ===== */
 app.use('/auth', require('./routes/auth'));
 
+app.get('/', (req, res) => {
+  if (req.session.user) return res.redirect('/home');
+  res.redirect('/auth/login');
+});
+
 /* ===== HOME (단 하나) ===== */
 app.get('/home', authMiddleware, async (req, res) => {
   try {
