@@ -10,7 +10,7 @@ const { OAuth2Client } = require('google-auth-library');
 let csrfProtection;
 try {
   const csrf = require('csurf');
-  csrfProtection = csrf({ cookie: true });
+  csrfProtection = csrf({ cookie: false }); // session 기반으로 변경
 } catch (err) {
   console.log('⚠️ CSRF 비활성화');
   csrfProtection = (req, res, next) => {
@@ -24,32 +24,48 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 /* ================================
    로그인 페이지
 ================================ */
-router.get('/login', csrfProtection, (req, res) => {
+router.get('/login', (req, res) => {
   if (req.session.user) {
     return res.redirect('/home');
   }
 
   res.render('login', {
-    error: null,
-    csrfToken: req.csrfToken()
+    error: req.query.error || null,
+    csrfToken: '' // server.js에서 제외했으므로 빈 문자열
   });
 });
 
 /* ================================
    회원가입 페이지
 ================================ */
-router.get('/register', csrfProtection, (req, res) => {
+router.get('/register', (req, res) => {
+  if (req.session.user) {
+    return res.redirect('/home');
+  }
+  
   res.render('register', {
     error: null,
-    csrfToken: req.csrfToken()
+    csrfToken: '' // server.js에서 제외했으므로 빈 문자열
   });
 });
 
 /* ================================
-   로그아웃
+   로그아웃 (POST와 GET 모두 지원)
 ================================ */
+router.post('/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('로그아웃 오류:', err);
+    }
+    res.redirect('/auth/login');
+  });
+});
+
 router.get('/logout', (req, res) => {
-  req.session.destroy(() => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('로그아웃 오류:', err);
+    }
     res.redirect('/auth/login');
   });
 });
@@ -57,7 +73,7 @@ router.get('/logout', (req, res) => {
 /* ================================
    일반 로그인
 ================================ */
-router.post('/login', csrfProtection, [
+router.post('/login', [
   body('username').trim().notEmpty().withMessage('아이디를 입력하세요'),
   body('password').notEmpty().withMessage('비밀번호를 입력하세요')
 ], async (req, res) => {
@@ -65,7 +81,7 @@ router.post('/login', csrfProtection, [
   if (!errors.isEmpty()) {
     return res.render('login', {
       error: errors.array()[0].msg,
-      csrfToken: req.csrfToken()
+      csrfToken: ''
     });
   }
 
@@ -82,7 +98,7 @@ router.post('/login', csrfProtection, [
     if (result.rows.length === 0) {
       return res.render('login', {
         error: '아이디 또는 비밀번호가 올바르지 않습니다.',
-        csrfToken: req.csrfToken()
+        csrfToken: ''
       });
     }
 
@@ -92,23 +108,32 @@ router.post('/login', csrfProtection, [
     if (!isValid) {
       return res.render('login', {
         error: '아이디 또는 비밀번호가 올바르지 않습니다.',
-        csrfToken: req.csrfToken()
+        csrfToken: ''
       });
     }
 
-    req.session.user = user;
+    // 세션에 사용자 정보 저장
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      student_id: user.student_id,
+      diploma: user.diploma,
+      grade: user.grade
+    };
 
+    // 마지막 로그인 시간 업데이트
     await pool.query(
       'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
       [user.id]
-    );
+    ).catch(err => console.log('last_login 업데이트 실패:', err.message));
 
     res.redirect('/home');
   } catch (err) {
-    console.error(err);
+    console.error('로그인 오류:', err);
     res.render('login', {
       error: '로그인 중 오류가 발생했습니다.',
-      csrfToken: req.csrfToken()
+      csrfToken: ''
     });
   }
 });
@@ -138,7 +163,9 @@ router.get('/google', (req, res) => {
 router.get('/google/callback', async (req, res) => {
   const { code } = req.query;
 
-  if (!code) return res.redirect('/auth/login');
+  if (!code) {
+    return res.redirect('/auth/login?error=인증_코드가_없습니다');
+  }
 
   try {
     const redirectUri =
@@ -162,7 +189,7 @@ router.get('/google/callback', async (req, res) => {
 
     if (tokens.error) {
       console.error('Google OAuth Error:', tokens);
-      return res.redirect('/auth/login?error=google_auth_failed');
+      return res.redirect('/auth/login?error=구글_인증_실패');
     }
 
     // ID Token 검증
@@ -177,7 +204,7 @@ router.get('/google/callback', async (req, res) => {
 
     // 도메인 확인
     if (!email.endsWith('@cnsa.hs.kr')) {
-      return res.redirect('/auth/login?error=invalid_domain');
+      return res.redirect('/auth/login?error=학교_이메일만_사용_가능합니다');
     }
 
     // 기존 유저 확인
@@ -191,12 +218,19 @@ router.get('/google/callback', async (req, res) => {
     if (userCheck.rows.length > 0) {
       const user = userCheck.rows[0];
 
-      req.session.user = user;
+      req.session.user = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        student_id: user.student_id,
+        diploma: user.diploma,
+        grade: user.grade
+      };
 
       await pool.query(
         'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id=$1',
         [user.id]
-      );
+      ).catch(err => console.log('last_login 업데이트 실패:', err.message));
 
       return res.redirect('/home');
     }
@@ -211,14 +245,14 @@ router.get('/google/callback', async (req, res) => {
     return res.redirect('/auth/complete-registration');
   } catch (err) {
     console.error('Google 인증 오류:', err);
-    res.redirect('/auth/login?error=google_error');
+    res.redirect('/auth/login?error=구글_인증_오류');
   }
 });
 
 /* ================================
    구글 OAuth 후 추가 회원가입 페이지
 ================================ */
-router.get('/complete-registration', csrfProtection, (req, res) => {
+router.get('/complete-registration', (req, res) => {
   if (!req.session.pendingGoogleAuth) {
     return res.redirect('/auth/register');
   }
@@ -226,102 +260,103 @@ router.get('/complete-registration', csrfProtection, (req, res) => {
   res.render('complete-registration', {
     email: req.session.pendingGoogleAuth.email,
     error: null,
-    csrfToken: req.csrfToken()
+    csrfToken: ''
   });
 });
 
 /* ================================
    구글 OAuth 후 회원가입 처리
 ================================ */
-router.post(
-  '/complete-registration',
-  csrfProtection,
-  [
-    body('username')
-      .trim()
-      .isLength({ min: 3, max: 20 })
-      .withMessage('아이디는 3~20자입니다.'),
-    body('password')
-      .isLength({ min: 8 })
-      .withMessage('비밀번호는 최소 8자 이상입니다.'),
-    body('student_id').notEmpty().withMessage('학번을 입력하세요'),
-    body('diploma').notEmpty().withMessage('디플로마를 선택하세요')
-  ],
-  async (req, res) => {
-    if (!req.session.pendingGoogleAuth) {
-      return res.redirect('/auth/register');
-    }
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.render('complete-registration', {
-        email: req.session.pendingGoogleAuth.email,
-        error: errors.array()[0].msg,
-        csrfToken: req.csrfToken()
-      });
-    }
-
-    const { username, password, student_id, diploma } = req.body;
-    const { email, googleId } = req.session.pendingGoogleAuth;
-
-    try {
-      // 중복 검사
-      const dupe = await pool.query(
-        `SELECT id FROM users WHERE username=$1 OR student_id=$2`,
-        [username, student_id]
-      );
-
-      if (dupe.rows.length > 0) {
-        return res.render('complete-registration', {
-          email,
-          error: '이미 존재하는 아이디 또는 학번입니다.',
-          csrfToken: req.csrfToken()
-        });
-      }
-
-      const passwordHash = await bcrypt.hash(password, 10);
-
-      const insert = await pool.query(
-        `INSERT INTO users (username, email, password_hash, student_id, diploma, google_id, grade)
-         VALUES ($1, $2, $3, $4, $5, $6, 1)
-         RETURNING id, username, email, student_id, diploma, grade`,
-        [username, email, passwordHash, student_id, diploma, googleId]
-      );
-
-      const user = insert.rows[0];
-
-      req.session.user = user;
-
-      delete req.session.pendingGoogleAuth;
-
-      res.redirect('/home');
-    } catch (err) {
-      console.error(err);
-      res.render('complete-registration', {
-        email,
-        error: '회원가입 중 오류 발생',
-        csrfToken: req.csrfToken()
-      });
-    }
+router.post('/complete-registration', [
+  body('username')
+    .trim()
+    .isLength({ min: 3, max: 20 })
+    .withMessage('아이디는 3~20자입니다.'),
+  body('password')
+    .isLength({ min: 8 })
+    .withMessage('비밀번호는 최소 8자 이상입니다.'),
+  body('student_id').notEmpty().withMessage('학번을 입력하세요'),
+  body('diploma').notEmpty().withMessage('디플로마를 선택하세요')
+], async (req, res) => {
+  if (!req.session.pendingGoogleAuth) {
+    return res.redirect('/auth/register');
   }
-);
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.render('complete-registration', {
+      email: req.session.pendingGoogleAuth.email,
+      error: errors.array()[0].msg,
+      csrfToken: ''
+    });
+  }
+
+  const { username, password, student_id, diploma } = req.body;
+  const { email, googleId } = req.session.pendingGoogleAuth;
+
+  try {
+    // 중복 검사
+    const dupe = await pool.query(
+      `SELECT id FROM users WHERE username=$1 OR student_id=$2`,
+      [username, student_id]
+    );
+
+    if (dupe.rows.length > 0) {
+      return res.render('complete-registration', {
+        email,
+        error: '이미 존재하는 아이디 또는 학번입니다.',
+        csrfToken: ''
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const insert = await pool.query(
+      `INSERT INTO users (username, email, password_hash, student_id, diploma, google_id, grade)
+       VALUES ($1, $2, $3, $4, $5, $6, 1)
+       RETURNING id, username, email, student_id, diploma, grade`,
+      [username, email, passwordHash, student_id, diploma, googleId]
+    );
+
+    const user = insert.rows[0];
+
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      student_id: user.student_id,
+      diploma: user.diploma,
+      grade: user.grade
+    };
+
+    delete req.session.pendingGoogleAuth;
+
+    res.redirect('/home');
+  } catch (err) {
+    console.error('회원가입 오류:', err);
+    res.render('complete-registration', {
+      email,
+      error: '회원가입 중 오류 발생',
+      csrfToken: ''
+    });
+  }
+});
 
 /* ================================
    일반 회원가입
 ================================ */
-router.post('/register', csrfProtection, [
+router.post('/register', [
   body('username').trim().isLength({ min: 3, max: 20 }).withMessage('아이디는 3-20자여야 합니다'),
   body('email').isEmail().withMessage('올바른 이메일을 입력하세요'),
   body('password').isLength({ min: 8 }).withMessage('비밀번호는 최소 8자 이상이어야 합니다'),
   body('student_id').notEmpty().withMessage('학번을 입력하세요'),
   body('diploma').notEmpty().withMessage('디플로마를 선택하세요')
 ], async (req, res) => {
-
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.render('register', {
       error: errors.array()[0].msg,
-      csrfToken: req.csrfToken()
+      csrfToken: ''
     });
   }
 
@@ -330,7 +365,7 @@ router.post('/register', csrfProtection, [
   if (!email.endsWith('@cnsa.hs.kr')) {
     return res.render('register', {
       error: '학교 이메일(@cnsa.hs.kr)만 사용할 수 있습니다.',
-      csrfToken: req.csrfToken()
+      csrfToken: ''
     });
   }
 
@@ -343,7 +378,7 @@ router.post('/register', csrfProtection, [
     if (dupe.rows.length > 0) {
       return res.render('register', {
         error: '이미 존재하는 아이디, 이메일 또는 학번입니다.',
-        csrfToken: req.csrfToken()
+        csrfToken: ''
       });
     }
 
@@ -357,10 +392,10 @@ router.post('/register', csrfProtection, [
 
     res.redirect('/auth/login');
   } catch (err) {
-    console.error(err);
+    console.error('회원가입 오류:', err);
     res.render('register', {
       error: '회원가입 중 오류 발생',
-      csrfToken: req.csrfToken()
+      csrfToken: ''
     });
   }
 });

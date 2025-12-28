@@ -186,9 +186,9 @@ app.get('/calendar', authMiddleware, async (req, res) => {
 /* ===== RANKING ===== */
 app.get('/ranking', authMiddleware, async (req, res) => {
   try {
-    // 현재 시즌 조회
+    // 현재 시즌 조회 (description 컬럼 제외)
     const seasonResult = await pool.query(
-      `SELECT id, name, start_date, end_date, description 
+      `SELECT id, name, start_date, end_date 
        FROM seasons 
        WHERE CURRENT_DATE BETWEEN start_date AND end_date 
        ORDER BY start_date DESC 
@@ -241,8 +241,50 @@ app.get('/pvp', authMiddleware, (req, res) => {
 });
 
 /* ===== PROBLEM (추가) ===== */
-app.get('/problem', authMiddleware, (req, res) => {
-  res.render('problem', { user: req.session.user, problems: [] });
+app.get('/problem', authMiddleware, async (req, res) => {
+  try {
+    // 문제 목록 조회
+    const problemsResult = await pool.query(
+      `SELECT id, title, difficulty, category, solved 
+       FROM problems 
+       ORDER BY id DESC 
+       LIMIT 50`
+    );
+    
+    // 사용자 통계 조회
+    const statsResult = await pool.query(
+      `SELECT 
+        COUNT(*) FILTER (WHERE solved = true) as total_solved,
+        COUNT(*) as total_problems
+       FROM problems`
+    );
+    
+    const stats = statsResult.rows[0] || { total_solved: 0, total_problems: 0 };
+    
+    res.render('problem', { 
+      user: req.session.user, 
+      problems: problemsResult.rows,
+      stats: {
+        totalSolved: stats.total_solved || 0,
+        totalProblems: stats.total_problems || 0,
+        solvingRate: stats.total_problems > 0 
+          ? Math.round((stats.total_solved / stats.total_problems) * 100) 
+          : 0
+      }
+    });
+  } catch (err) {
+    console.error('문제 페이지 오류:', err);
+    // 테이블이 없는 경우 기본값으로 렌더링
+    res.render('problem', { 
+      user: req.session.user, 
+      problems: [],
+      stats: {
+        totalSolved: 0,
+        totalProblems: 0,
+        solvingRate: 0
+      }
+    });
+  }
 });
 
 /* ===== MYPAGE (추가) ===== */
@@ -258,13 +300,42 @@ app.get('/mypage', authMiddleware, async (req, res) => {
       [req.session.user.id]
     );
     
+    // 목표 조회
+    const goalsResult = await pool.query(
+      `SELECT korean, math, english, science, social 
+       FROM goals 
+       WHERE user_id = $1 
+       LIMIT 1`,
+      [req.session.user.id]
+    );
+    
+    const goals = goalsResult.rows[0] || {
+      korean: 3,
+      math: 3,
+      english: 3,
+      science: 3,
+      social: 3
+    };
+    
     res.render('mypage', {
       user: req.session.user,
-      stats: statsResult.rows[0] || { completed_total: 0, total_todos: 0 }
+      stats: statsResult.rows[0] || { completed_total: 0, total_todos: 0 },
+      goals
     });
   } catch (err) {
     console.error('마이페이지 오류:', err);
-    res.status(500).send('페이지 오류');
+    // 에러 발생 시 기본값으로 렌더링
+    res.render('mypage', {
+      user: req.session.user,
+      stats: { completed_total: 0, total_todos: 0 },
+      goals: {
+        korean: 3,
+        math: 3,
+        english: 3,
+        science: 3,
+        social: 3
+      }
+    });
   }
 });
 
