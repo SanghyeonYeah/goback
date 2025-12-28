@@ -53,9 +53,7 @@ app.use(session({
 /* ===== CSRF (Auth 라우터 제외) ===== */
 const csrfProtection = csurf({ cookie: false });
 
-// CSRF 보호를 선택적으로 적용
 app.use((req, res, next) => {
-  // /auth 경로는 CSRF 보호 제외 (또는 별도 처리)
   if (req.path.startsWith('/auth')) {
     return next();
   }
@@ -65,7 +63,6 @@ app.use((req, res, next) => {
 /* ===== 템플릿 전역 ===== */
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
-  // CSRF 토큰은 보호가 적용된 경우만 생성
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   next();
 });
@@ -77,7 +74,7 @@ const apiLimiter = rateLimit({
   message: 'Too many requests'
 });
 
-/* ===== Auth Router (CSRF 별도 처리) ===== */
+/* ===== Auth Router ===== */
 app.use('/auth', require('./routes/auth'));
 
 app.get('/', (req, res) => {
@@ -137,23 +134,138 @@ app.post('/todo', authMiddleware, csrfProtection, apiLimiter, async (req, res) =
   res.json({ success: true });
 });
 
-/* ===== 기타 페이지 ===== */
-app.get('/calendar', authMiddleware, (req, res) => {
-  const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
-  res.render('calendar', {
-    user: req.session.user,
-    currentMonth,
-    stats: {}
-  });
+/* ===== CALENDAR ===== */
+app.get('/calendar', authMiddleware, async (req, res) => {
+  try {
+    const now = new Date();
+    const year = parseInt(req.query.year) || now.getFullYear();
+    const month = parseInt(req.query.month) || now.getMonth() + 1;
+    
+    // 캘린더 데이터 생성
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const startDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+    
+    const calendarDays = [];
+    
+    // 이전 달 빈 칸
+    for (let i = 0; i < startDayOfWeek; i++) {
+      calendarDays.push({ isEmpty: true });
+    }
+    
+    // 현재 달 날짜
+    for (let date = 1; date <= daysInMonth; date++) {
+      const currentDate = new Date(year, month - 1, date);
+      const dayOfWeek = currentDate.getDay();
+      
+      calendarDays.push({
+        date,
+        isEmpty: false,
+        isToday: currentDate.toDateString() === now.toDateString(),
+        isSunday: dayOfWeek === 0,
+        isSaturday: dayOfWeek === 6,
+        todos: []
+      });
+    }
+    
+    res.render('calendar', {
+      user: req.session.user,
+      currentMonth: `${year}-${month}`,
+      year,
+      month,
+      calendarDays,
+      stats: {}
+    });
+  } catch (err) {
+    console.error('캘린더 오류:', err);
+    res.status(500).send('페이지 오류');
+  }
 });
 
-app.get('/ranking', authMiddleware, (req, res) => {
-  res.render('ranking', { user: req.session.user });
+/* ===== RANKING ===== */
+app.get('/ranking', authMiddleware, async (req, res) => {
+  try {
+    // 현재 시즌 조회
+    const seasonResult = await pool.query(
+      `SELECT id, name, start_date, end_date, description 
+       FROM seasons 
+       WHERE CURRENT_DATE BETWEEN start_date AND end_date 
+       ORDER BY start_date DESC 
+       LIMIT 1`
+    );
+    
+    const currentSeason = seasonResult.rows[0] || null;
+    
+    // 시즌 랭킹 조회
+    let seasonRanking = [];
+    if (currentSeason) {
+      const rankingResult = await pool.query(
+        `SELECT u.username, sr.total_points, sr.rank
+         FROM season_rankings sr
+         JOIN users u ON sr.user_id = u.id
+         WHERE sr.season_id = $1
+         ORDER BY sr.rank
+         LIMIT 10`,
+        [currentSeason.id]
+      );
+      seasonRanking = rankingResult.rows;
+    }
+    
+    // 일일 랭킹 조회
+    const dailyResult = await pool.query(
+      `SELECT u.username, COUNT(*) as completed_count
+       FROM todos t
+       JOIN users u ON t.user_id = u.id
+       WHERE t.date = CURRENT_DATE AND t.completed = true
+       GROUP BY u.id, u.username
+       ORDER BY completed_count DESC
+       LIMIT 10`
+    );
+    
+    res.render('ranking', {
+      user: req.session.user,
+      currentSeason,
+      seasonRanking,
+      dailyRanking: dailyResult.rows
+    });
+  } catch (err) {
+    console.error('랭킹 오류:', err);
+    res.status(500).send('페이지 오류');
+  }
 });
 
+/* ===== PVP ===== */
 app.get('/pvp', authMiddleware, (req, res) => {
   res.render('pvp', { user: req.session.user, match: null });
+});
+
+/* ===== PROBLEM (추가) ===== */
+app.get('/problem', authMiddleware, (req, res) => {
+  res.render('problem', { user: req.session.user, problems: [] });
+});
+
+/* ===== MYPAGE (추가) ===== */
+app.get('/mypage', authMiddleware, async (req, res) => {
+  try {
+    // 사용자 통계 조회
+    const statsResult = await pool.query(
+      `SELECT 
+        COUNT(*) FILTER (WHERE completed = true) as completed_total,
+        COUNT(*) as total_todos
+       FROM todos
+       WHERE user_id = $1`,
+      [req.session.user.id]
+    );
+    
+    res.render('mypage', {
+      user: req.session.user,
+      stats: statsResult.rows[0] || { completed_total: 0, total_todos: 0 }
+    });
+  } catch (err) {
+    console.error('마이페이지 오류:', err);
+    res.status(500).send('페이지 오류');
+  }
 });
 
 /* ===== Health ===== */
