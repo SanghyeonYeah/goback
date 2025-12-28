@@ -11,10 +11,10 @@ const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const csrf = require('csurf');
 const pool = require('./database/init');
 
 const { authMiddleware } = require('./middleware/auth');
-
 
 const app = express();
 
@@ -37,18 +37,24 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 /* ===== Session ===== */
-app.use(session({
-  name: 'studyplanner.sid',
-  secret: process.env.SESSION_SECRET || 'dev-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
+app.use(
+  session({
+    name: 'studyplanner.sid',
+    secret: process.env.SESSION_SECRET || 'dev-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    }
+  })
+);
+
+/* ===== CSRF ===== */
+// session 기반 CSRF
+const csrfProtection = csrf();
 
 /* ===== 템플릿 전역 ===== */
 app.use((req, res, next) => {
@@ -57,21 +63,26 @@ app.use((req, res, next) => {
 });
 
 /* ===== Rate Limit ===== */
-const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
 
 /* ===== Auth Router ===== */
 app.use('/auth', require('./routes/auth'));
 
+/* ===== ROOT ===== */
 app.get('/', (req, res) => {
   if (req.session.user) return res.redirect('/home');
-  res.redirect('/auth/login');
+  return res.redirect('/auth/login');
 });
 
-/* ===== HOME (단 하나) ===== */
-app.get('/home', authMiddleware, async (req, res) => {
+/* ===== HOME ===== */
+app.get('/home', authMiddleware, csrfProtection, async (req, res) => {
   try {
     res.render('home', {
       user: req.session.user,
+      csrfToken: req.csrfToken(),
       dday: 0,
       season: null,
       todos: { total: 0, completed: 0 },
@@ -86,38 +97,69 @@ app.get('/home', authMiddleware, async (req, res) => {
 });
 
 /* ===== TODO ===== */
-app.get('/todo', authMiddleware, async (req, res) => {
-  const result = await pool.query(
-    `SELECT id, subject, task, completed
-     FROM todos
-     WHERE user_id = $1 AND date = CURRENT_DATE`,
-    [req.session.user.id]
-  );
-  res.render('todo', { todos: result.rows });
+app.get('/todo', authMiddleware, csrfProtection, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT id, subject, task, completed
+      FROM todos
+      WHERE user_id = $1
+        AND date = CURRENT_DATE
+      `,
+      [req.session.user.id]
+    );
+
+    res.render('todo', {
+      todos: result.rows,
+      csrfToken: req.csrfToken()
+    });
+  } catch (err) {
+    console.error('TODO 오류:', err);
+    res.status(500).send('페이지 오류');
+  }
 });
 
-app.post('/todo', authMiddleware, apiLimiter, async (req, res) => {
+app.post('/todo', authMiddleware, apiLimiter, csrfProtection, async (req, res) => {
   res.json({ success: true });
 });
 
 /* ===== 기타 페이지 ===== */
-app.get('/calendar', authMiddleware, (req, res) => {
+app.get('/calendar', authMiddleware, csrfProtection, (req, res) => {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
-  res.render('calendar', { user: req.session.user, currentMonth });
+
+  res.render('calendar', {
+    user: req.session.user,
+    currentMonth,
+    csrfToken: req.csrfToken()
+  });
 });
 
-app.get('/ranking', authMiddleware, (req, res) => {
-  res.render('ranking', { user: req.session.user });
+app.get('/ranking', authMiddleware, csrfProtection, (req, res) => {
+  res.render('ranking', {
+    user: req.session.user,
+    csrfToken: req.csrfToken()
+  });
 });
 
-app.get('/pvp', authMiddleware, (req, res) => {
-  res.render('pvp', { user: req.session.user });
+app.get('/pvp', authMiddleware, csrfProtection, (req, res) => {
+  res.render('pvp', {
+    user: req.session.user,
+    csrfToken: req.csrfToken()
+  });
 });
 
 /* ===== Health ===== */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+/* ===== CSRF Error ===== */
+app.use((err, req, res, next) => {
+  if (err.code === 'EBADCSRFTOKEN') {
+    return res.status(403).send('CSRF 검증 실패');
+  }
+  next(err);
 });
 
 /* ===== 404 ===== */
@@ -134,7 +176,8 @@ app.use((err, req, res, next) => {
 /* ===== Start ===== */
 const PORT = Number(process.env.PORT) || 3000;
 
-pool.query('SELECT NOW()')
+pool
+  .query('SELECT NOW()')
   .then(() => console.log('✅ DB 연결 성공'))
   .catch(e => console.error('❌ DB 오류', e.message));
 
