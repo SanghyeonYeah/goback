@@ -11,8 +11,9 @@ const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
-const pool = require('./database/init');
+const crypto = require('crypto');
 
+const pool = require('./database/init');
 const { authMiddleware } = require('./middleware/auth');
 
 const app = express();
@@ -49,6 +50,15 @@ app.use(session({
   }
 }));
 
+/* ===== CSRF 토큰 발급 (서버 주도) ===== */
+app.use((req, res, next) => {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+  }
+  res.locals.csrfToken = req.session.csrfToken;
+  next();
+});
+
 /* ===== 템플릿 전역 ===== */
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
@@ -61,7 +71,7 @@ const apiLimiter = rateLimit({
   max: 100
 });
 
-/* ===== Auth ===== */
+/* ===== Auth Router ===== */
 app.use('/auth', require('./routes/auth'));
 
 app.get('/', (req, res) => {
@@ -71,15 +81,21 @@ app.get('/', (req, res) => {
 
 /* ===== HOME ===== */
 app.get('/home', authMiddleware, async (req, res) => {
-  res.render('home', {
-    user: req.session.user,
-    dday: 0,
-    season: null,
-    todos: { total: 0, completed: 0 },
-    seasonRanking: [],
-    dailyRanking: [],
-    todayTodos: []
-  });
+  try {
+    res.render('home', {
+      user: req.session.user,
+      dday: 0,
+      season: null,
+      todos: { total: 0, completed: 0 },
+      seasonRanking: [],
+      dailyRanking: [],
+      todayTodos: [],
+      goals: {} // 🔥 EJS 안전
+    });
+  } catch (err) {
+    console.error('홈 오류:', err);
+    res.status(500).send('페이지 오류');
+  }
 });
 
 /* ===== TODO ===== */
@@ -93,15 +109,19 @@ app.get('/todo', authMiddleware, async (req, res) => {
 
   res.render('todo', {
     todos: result.rows,
-    goals: {},              // 🔑 추가
+    goals: {} // 🔥 없으면 터지던 원인
   });
 });
 
 app.post('/todo', authMiddleware, apiLimiter, async (req, res) => {
+  // CSRF 검증
+  if (req.body._csrf !== req.session.csrfToken) {
+    return res.status(403).json({ error: 'Invalid CSRF token' });
+  }
   res.json({ success: true });
 });
 
-/* ===== CALENDAR ===== */
+/* ===== Calendar ===== */
 app.get('/calendar', authMiddleware, (req, res) => {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
@@ -109,26 +129,23 @@ app.get('/calendar', authMiddleware, (req, res) => {
   res.render('calendar', {
     user: req.session.user,
     currentMonth,
-    stats: {                // 🔑 추가
+    stats: {
       monthlyGoal: 0,
-      completedDays: 0,
-      successRate: 0
+      completedDays: 0
     }
   });
 });
 
-/* ===== RANKING ===== */
+/* ===== Ranking ===== */
 app.get('/ranking', authMiddleware, (req, res) => {
-  res.render('ranking', {
-    user: req.session.user
-  });
+  res.render('ranking', { user: req.session.user });
 });
 
 /* ===== PVP ===== */
 app.get('/pvp', authMiddleware, (req, res) => {
   res.render('pvp', {
     user: req.session.user,
-    match: null             // 🔑 추가
+    match: null // 🔥 undefined 방지
   });
 });
 
