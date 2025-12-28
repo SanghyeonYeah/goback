@@ -12,6 +12,7 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const pool = require('./database/init');
+const authMiddleware = require("./middleware/auth");
 
 const app = express();
 
