@@ -13,9 +13,8 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const pool = require('./database/init');
 
-const {
-  requireAuth
-} = require('./middleware/auth');
+const { authMiddleware } = require('./middleware/auth');
+
 
 const app = express();
 
@@ -64,7 +63,7 @@ const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use('/auth', require('./routes/auth'));
 
 /* ===== HOME (단 하나) ===== */
-app.get('/home', requireAuth, async (req, res) => {
+app.get('/home', authMiddleware, async (req, res) => {
   try {
     res.render('home', {
       user: req.session.user,
@@ -82,7 +81,7 @@ app.get('/home', requireAuth, async (req, res) => {
 });
 
 /* ===== TODO ===== */
-app.get('/todo', requireAuth, async (req, res) => {
+app.get('/todo', authMiddleware, async (req, res) => {
   const result = await pool.query(
     `SELECT id, subject, task, completed
      FROM todos
@@ -92,22 +91,22 @@ app.get('/todo', requireAuth, async (req, res) => {
   res.render('todo', { todos: result.rows });
 });
 
-app.post('/todo', requireAuth, apiLimiter, async (req, res) => {
+app.post('/todo', authMiddleware, apiLimiter, async (req, res) => {
   res.json({ success: true });
 });
 
 /* ===== 기타 페이지 ===== */
-app.get('/calendar', requireAuth, (req, res) => {
+app.get('/calendar', authMiddleware, (req, res) => {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${now.getMonth() + 1}`;
   res.render('calendar', { user: req.session.user, currentMonth });
 });
 
-app.get('/ranking', requireAuth, (req, res) => {
+app.get('/ranking', authMiddleware, (req, res) => {
   res.render('ranking', { user: req.session.user });
 });
 
-app.get('/pvp', requireAuth, (req, res) => {
+app.get('/pvp', authMiddleware, (req, res) => {
   res.render('pvp', { user: req.session.user });
 });
 
