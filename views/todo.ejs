@@ -4,25 +4,348 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>할 일 - 스터디 플래너</title>
-    <link rel="stylesheet" href="/css/todo.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .nav-menu {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu a {
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #595959;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a.active,
+        .nav-menu a:hover {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .goal-summary {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .goal-summary h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+        }
+
+        .goal-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .goal-item {
+            background: #fafafa;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .goal-item .subject {
+            font-weight: 500;
+            color: #262626;
+            font-size: 14px;
+        }
+
+        .goal-item .grade {
+            font-weight: 600;
+            color: #1890ff;
+            font-size: 14px;
+        }
+
+        .progress-section {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .progress-percentage {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1890ff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 32px;
+            background: #f0f0f0;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            transition: width 0.5s ease;
+        }
+
+        .todo-list {
+            list-style: none;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            overflow: hidden;
+        }
+
+        .todo-item {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.3s;
+        }
+
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+
+        .todo-item:hover {
+            background: #fafafa;
+        }
+
+        .todo-item.completed {
+            background: #f6ffed;
+        }
+
+        .todo-item.completed:hover {
+            background: #d9f7be;
+        }
+
+        .todo-item form {
+            padding: 16px 20px;
+        }
+
+        .todo-item label {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .todo-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .todo-content {
+            flex: 1;
+        }
+
+        .todo-subject {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 6px;
+        }
+
+        .todo-item.completed .todo-subject {
+            color: #52c41a;
+            text-decoration: line-through;
+        }
+
+        .todo-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .todo-detail-item {
+            font-size: 13px;
+            color: #8c8c8c;
+            padding: 4px 8px;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+
+        .todo-item.completed .todo-detail-item {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .empty-state {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e8e8e8;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state p {
+            color: #8c8c8c;
+            font-size: 16px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 10px 20px;
+            background: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            color: #1890ff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: #e6f7ff;
+            border-color: #91d5ff;
+        }
+
+        @media (max-width: 768px) {
+            .goal-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 16px;
+            }
+
+            .goal-info {
+                grid-template-columns: 1fr;
+            }
+
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="container">
-    <h1>✅ 오늘의 할 일</h1>
+
+    <div class="page-header">
+        <h1>✅ 오늘의 할 일</h1>
+        <p>오늘 완료해야 할 학습 목표를 확인하세요</p>
+    </div>
+
+    <div class="nav-menu">
+        <a href="/home">홈</a>
+        <a href="/todo" class="active">할 일</a>
+        <a href="/calendar">달력</a>
+        <a href="/ranking">랭킹</a>
+        <a href="/problem">문제 풀이</a>
+        <a href="/pvp">PVP</a>
+        <a href="/mypage">마이페이지</a>
+    </div>
 
     <!-- 목표 요약 -->
-    <% if (goals) { %>
+    <% if (goals && Object.keys(goals).length > 0) { %>
     <div class="goal-summary">
         <h2>🎯 목표 등급</h2>
         <div class="goal-info">
-            <% Object.entries(goals).forEach(([subject, grade]) => { %>
-                <% if (grade) { %>
+            <% 
+            const subjectMap = {
+                'korean': '국어',
+                'math': '수학',
+                'english': '영어',
+                'social': '사회',
+                'science': '과학',
+                'history': '역사'
+            };
+            
+            Object.entries(goals).forEach(([key, value]) => { 
+                if (value && subjectMap[key]) { 
+            %>
                 <div class="goal-item">
-                    <div class="subject"><%= subject %></div>
-                    <div class="grade"><%= grade %>등급</div>
+                    <div class="subject"><%= subjectMap[key] %></div>
+                    <div class="grade"><%= value %>등급</div>
                 </div>
-                <% } %>
-            <% }) %>
+            <% 
+                }
+            }) 
+            %>
         </div>
     </div>
     <% } %>
@@ -30,12 +353,17 @@
     <!-- 진행률 바 -->
     <div class="progress-section">
         <div class="progress-header">
-            <span class="progress-label">진행률</span>
-            <span class="progress-percentage"><%= progress.completed %>/<%= progress.total %> 완료 (<%= progress.percentage %>%)</span>
+            <span class="progress-label">📊 오늘의 진행률</span>
+            <span class="progress-percentage">
+                <%= progress.completed %>/<%= progress.total %> 완료 
+                (<%= progress.percentage %>%)
+            </span>
         </div>
         <div class="progress-bar">
             <div class="progress-fill" style="width: <%= progress.percentage %>%;">
-                <%= progress.percentage %>%
+                <% if (progress.percentage >= 20) { %>
+                    <%= progress.percentage %>%
+                <% } %>
             </div>
         </div>
     </div>
@@ -45,6 +373,7 @@
         <div class="empty-state">
             <div class="empty-state-icon">📭</div>
             <p>오늘 할 일이 없습니다.</p>
+            <p style="margin-top: 8px; font-size: 14px;">마이페이지에서 목표를 설정해보세요!</p>
         </div>
     <% } else { %>
         <ul class="todo-list">
@@ -53,11 +382,23 @@
                 <form action="/todos/<%= todo.id %>/toggle" method="POST">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <label>
-                        <input type="checkbox" name="completed" onchange="this.form.submit()" <%= todo.completed ? 'checked' : '' %>>
+                        <input type="checkbox" 
+                               name="completed" 
+                               onchange="this.form.submit()" 
+                               <%= todo.completed ? 'checked' : '' %>>
                         <div class="todo-content">
                             <div class="todo-subject"><%= todo.subject %></div>
                             <div class="todo-details">
                                 <span class="todo-detail-item">📝 <%= todo.task %></span>
+                                <% if (todo.difficulty) { %>
+                                    <span class="todo-detail-item">
+                                        <% if (todo.difficulty === '쉬움') { %>⭐
+                                        <% } else if (todo.difficulty === '보통') { %>⭐⭐
+                                        <% } else { %>⭐⭐⭐
+                                        <% } %>
+                                        <%= todo.difficulty %>
+                                    </span>
+                                <% } %>
                             </div>
                         </div>
                     </label>
@@ -68,6 +409,7 @@
     <% } %>
 
     <a href="/home" class="back-link">← 홈으로 돌아가기</a>
+
 </div>
 </body>
 </html>

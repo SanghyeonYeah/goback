@@ -12,148 +12,150 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        .header {
+        .page-header {
             background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8e8e8;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
+        .page-header h1 {
+            color: #262626;
+            font-size: 24px;
+            font-weight: 600;
         }
 
         .nav-links {
             display: flex;
-            gap: 15px;
+            gap: 12px;
         }
 
-        .nav-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: transform 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .nav-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .form-section {
+        .nav-link {
+            padding: 8px 16px;
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
+            color: #595959;
+            text-decoration: none;
+            border-radius: 4px;
+            border: 1px solid #d9d9d9;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s;
         }
 
-        .form-section h2 {
-            color: #667eea;
-            margin-bottom: 25px;
-            font-size: 22px;
+        .nav-link:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .nav-link.active {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+        }
+
+        .form-card,
+        .list-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-title {
+            color: #262626;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        .form-group label {
+        label {
             display: block;
+            color: #595959;
+            font-size: 14px;
+            font-weight: 500;
             margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
         }
 
-        .form-group input,
-        .form-group textarea {
+        label .required {
+            color: #ff4d4f;
+            margin-left: 4px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
+            padding: 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
             font-family: inherit;
         }
 
-        .submit-btn {
+        input:hover,
+        textarea:hover {
+            border-color: #40a9ff;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            padding: 12px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s;
         }
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
+        .btn-primary {
+            background: #1890ff;
+            color: white;
         }
 
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #f5c6cb;
-        }
-
-        .season-list {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .season-list h2 {
-            color: #667eea;
-            margin-bottom: 25px;
-            font-size: 22px;
+        .btn-primary:hover {
+            background: #40a9ff;
         }
 
         .season-table {
@@ -161,232 +163,280 @@
             border-collapse: collapse;
         }
 
+        .season-table thead {
+            background: #fafafa;
+        }
+
         .season-table th {
-            background: #f9f9f9;
-            padding: 15px;
+            padding: 12px;
             text-align: left;
             font-weight: 600;
-            color: #667eea;
-            border-bottom: 2px solid #667eea;
+            color: #595959;
+            font-size: 13px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
         .season-table td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
+            padding: 16px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #262626;
+            font-size: 14px;
         }
 
         .season-table tr:hover {
-            background: #f9f9f9;
+            background: #fafafa;
+        }
+
+        .season-name {
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+
+        .season-desc {
+            font-size: 12px;
+            color: #8c8c8c;
         }
 
         .status-badge {
-            padding: 5px 12px;
+            padding: 4px 12px;
             border-radius: 12px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 500;
+            display: inline-block;
         }
 
         .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-ended {
-            background: #f8d7da;
-            color: #721c24;
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
         }
 
         .status-upcoming {
-            background: #d1ecf1;
-            color: #0c5460;
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
         }
 
-        .action-btn {
+        .status-ended {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
             padding: 6px 12px;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-            font-weight: 600;
-            margin-right: 5px;
-            transition: transform 0.2s;
+            transition: all 0.3s;
         }
 
-        .edit-btn {
-            background: #667eea;
+        .btn-edit {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+
+        .btn-edit:hover {
+            background: #1890ff;
             color: white;
         }
 
-        .delete-btn {
-            background: #ff5252;
+        .btn-delete {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+
+        .btn-delete:hover {
+            background: #ff4d4f;
             color: white;
         }
 
-        .action-btn:hover {
-            transform: translateY(-2px);
+        .help-text {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 6px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
+        <div class="page-header">
             <h1>⚙️ 시즌 관리</h1>
             <div class="nav-links">
-                <a href="/admin/problem" class="nav-btn">문제 관리</a>
-                <a href="/home" class="nav-btn">홈으로</a>
+                <a href="/admin/problem" class="nav-link">문제 관리</a>
+                <a href="/admin/season" class="nav-link active">시즌 관리</a>
+                <a href="/home" class="nav-link">홈으로</a>
             </div>
         </div>
 
-        <div class="form-section">
-            <h2>📅 새 시즌 등록</h2>
+        <div class="content-grid">
+            <div class="form-card">
+                <h2 class="card-title">📅 새 시즌 등록</h2>
 
-            <form action="/admin/season" method="POST">
-                <div class="form-group">
-                    <label for="name">시즌 이름 *</label>
-                    <input type="text" 
-                           id="name" 
-                           name="name" 
-                           placeholder="예: 2025 Winter Season" 
-                           required>
-                </div>
+                <form action="/admin/season" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-                <div class="form-group">
-                    <label for="start_date">시작일 *</label>
-                    <input type="date" 
-                           id="start_date" 
-                           name="start_date" 
-                           required>
-                </div>
+                    <div class="form-group">
+                        <label for="name">
+                            시즌 이름<span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               placeholder="예: 2025 Winter Season" 
+                               required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="end_date">종료일 *</label>
-                    <input type="date" 
-                           id="end_date" 
-                           name="end_date" 
-                           required>
-                </div>
+                    <div class="form-group">
+                        <label for="start_date">
+                            시작일<span class="required">*</span>
+                        </label>
+                        <input type="date" 
+                               id="start_date" 
+                               name="start_date" 
+                               required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="description">설명</label>
-                    <textarea id="description" 
-                              name="description" 
-                              placeholder="시즌에 대한 설명을 입력하세요 (선택사항)"></textarea>
-                </div>
+                    <div class="form-group">
+                        <label for="end_date">
+                            종료일<span class="required">*</span>
+                        </label>
+                        <input type="date" 
+                               id="end_date" 
+                               name="end_date" 
+                               required>
+                        <div class="help-text">종료일은 시작일보다 늦어야 합니다</div>
+                    </div>
 
-                <button type="submit" class="submit-btn">시즌 등록</button>
-            </form>
-        </div>
+                    <div class="form-group">
+                        <label for="description">설명</label>
+                        <textarea id="description" 
+                                  name="description" 
+                                  placeholder="시즌에 대한 설명을 입력하세요 (선택사항)"></textarea>
+                    </div>
 
-        <div class="season-list">
-            <h2>📋 시즌 목록</h2>
+                    <button type="submit" class="btn btn-primary">시즌 등록</button>
+                </form>
+            </div>
 
-            <table class="season-table">
-                <thead>
-                    <tr>
-                        <th>시즌명</th>
-                        <th>시작일</th>
-                        <th>종료일</th>
-                        <th>상태</th>
-                        <th>관리</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <strong>2025 Winter Season</strong>
-                            <br><small style="color: #666;">겨울 방학 시즌</small>
-                        </td>
-                        <td>2025.01.01</td>
-                        <td>2025.02.28</td>
-                        <td>
-                            <span class="status-badge status-active">
-                                진행중
-                            </span>
-                        </td>
-                        <td>
-                            <button class="action-btn edit-btn" 
-                                    onclick="editSeason(1)">
-                                수정
-                            </button>
-                            <button class="action-btn delete-btn" 
-                                    onclick="deleteSeason(1, '2025 Winter Season')">
-                                삭제
-                            </button>
-                        </td>
-                    </tr>
+            <div class="list-card">
+                <h2 class="card-title">📋 시즌 목록</h2>
 
-                    <tr>
-                        <td>
-                            <strong>2025 Spring Season</strong>
-                            <br><small style="color: #666;">1학기 시즌</small>
-                        </td>
-                        <td>2025.03.01</td>
-                        <td>2025.06.30</td>
-                        <td>
-                            <span class="status-badge status-upcoming">
-                                예정
-                            </span>
-                        </td>
-                        <td>
-                            <button class="action-btn edit-btn" 
-                                    onclick="editSeason(2)">
-                                수정
-                            </button>
-                            <button class="action-btn delete-btn" 
-                                    onclick="deleteSeason(2, '2025 Spring Season')">
-                                삭제
-                            </button>
-                        </td>
-                    </tr>
+                <table class="season-table">
+                    <thead>
+                        <tr>
+                            <th>시즌명</th>
+                            <th>기간</th>
+                            <th>상태</th>
+                            <th style="text-align: center;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="season-name">2025 Winter Season</div>
+                                <div class="season-desc">겨울 방학 시즌</div>
+                            </td>
+                            <td>
+                                2025.01.01<br>
+                                <span style="color: #8c8c8c;">~ 2025.02.28</span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-active">진행중</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" onclick="editSeason(1)">
+                                        수정
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="deleteSeason(1, '2025 Winter Season')">
+                                        삭제
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
 
-                    <tr>
-                        <td>
-                            <strong>2024 Fall Season</strong>
-                            <br><small style="color: #666;">2학기 시즌</small>
-                        </td>
-                        <td>2024.09.01</td>
-                        <td>2024.12.31</td>
-                        <td>
-                            <span class="status-badge status-ended">
-                                종료
-                            </span>
-                        </td>
-                        <td>
-                            <button class="action-btn edit-btn" 
-                                    onclick="editSeason(3)">
-                                수정
-                            </button>
-                            <button class="action-btn delete-btn" 
-                                    onclick="deleteSeason(3, '2024 Fall Season')">
-                                삭제
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                        <tr>
+                            <td>
+                                <div class="season-name">2025 Spring Season</div>
+                                <div class="season-desc">1학기 시즌</div>
+                            </td>
+                            <td>
+                                2025.03.01<br>
+                                <span style="color: #8c8c8c;">~ 2025.06.30</span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-upcoming">예정</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" onclick="editSeason(2)">
+                                        수정
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="deleteSeason(2, '2025 Spring Season')">
+                                        삭제
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <div class="season-name">2024 Fall Season</div>
+                                <div class="season-desc">2학기 시즌</div>
+                            </td>
+                            <td>
+                                2024.09.01<br>
+                                <span style="color: #8c8c8c;">~ 2024.12.31</span>
+                            </td>
+                            <td>
+                                <span class="status-badge status-ended">종료</span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" onclick="editSeason(3)">
+                                        수정
+                                    </button>
+                                    <button class="btn-action btn-delete" onclick="deleteSeason(3, '2024 Fall Season')">
+                                        삭제
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
         function editSeason(seasonId) {
             alert(`시즌 ID ${seasonId} 수정 기능은 추후 구현 예정입니다.`);
-            // 추후 구현: 수정 페이지로 이동 또는 모달 열기
         }
 
         function deleteSeason(seasonId, seasonName) {
             if (confirm(`"${seasonName}" 시즌을 삭제하시겠습니까?\n\n⚠️ 이 작업은 취소할 수 없습니다.`)) {
-                // 실제 구현 시 서버로 DELETE 요청
                 alert(`시즌 "${seasonName}"이 삭제되었습니다.`);
-                // location.reload();
             }
         }
 
-        // 시작일과 종료일 유효성 검사
+        // 날짜 유효성 검사
         document.getElementById('end_date').addEventListener('change', function() {
             const startDate = document.getElementById('start_date').value;
             const endDate = this.value;

@@ -5,83 +5,237 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로그인 - 스터디 플래너</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            display: flex; justify-content: center; align-items: center;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
         .login-container {
             background: white;
-            padding: 50px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            width: 400px;
-            max-width: 90%;
+            padding: 48px 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            width: 420px;
+            max-width: 100%;
+            border: 1px solid #e8e8e8;
         }
-        h1 { text-align: center; color: #667eea; margin-bottom: 30px; font-size: 32px; }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo h1 {
+            color: #1890ff;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
         .error {
-            background: #fee; color: #c33; padding: 12px; border-radius: 8px;
-            margin-bottom: 20px; border: 1px solid #fcc; font-size: 14px;
+            background: #fff2f0;
+            color: #ff4d4f;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            border: 1px solid #ffccc7;
+            font-size: 14px;
         }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
-        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
-        button {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; border: none; border-radius: 8px;
-            font-size: 16px; font-weight: 600; cursor: pointer;
-            margin-top: 10px;
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #262626;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:hover {
+            border-color: #40a9ff;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+        }
+
+        .button-primary {
+            width: 100%;
+            padding: 12px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .button-primary:hover {
+            background: #40a9ff;
+        }
+
+        .button-primary:active {
+            background: #096dd9;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e8e8e8;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 16px;
+            color: #8c8c8c;
+            font-size: 14px;
+            position: relative;
         }
 
         .google-btn {
+            width: 100%;
+            padding: 12px;
             background: white;
-            color: #555;
+            color: #595959;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #ddd;
-            margin-top: 15px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .google-btn img {
+        .google-btn:hover {
+            border-color: #40a9ff;
+            color: #1890ff;
+        }
+
+        .google-btn svg {
             width: 20px;
-            margin-right: 10px;
+            height: 20px;
+            margin-right: 8px;
         }
 
-        .register-link { text-align: center; margin-top: 20px; color: #666; }
-        .register-link a { color: #667eea; text-decoration: none; }
+        .register-link {
+            text-align: center;
+            margin-top: 24px;
+            color: #595959;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #1890ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            color: #40a9ff;
+        }
+
+        .features {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #595959;
+            font-size: 13px;
+        }
+
+        .feature-item::before {
+            content: '✓';
+            color: #52c41a;
+            font-weight: bold;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
-<div class="login-container">
-    <h1>스터디 플래너</h1>
-
-    <% if (error) { %>
-        <div class="error"><%= error %></div>
-    <% } %>
-
-    <form action="/auth/login" method="POST">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-
-        <div class="form-group">
-            <label for="username">아이디</label>
-            <input type="text" id="username" name="username" required>
+    <div class="login-container">
+        <div class="logo">
+            <h1>📚 스터디 플래너</h1>
+            <p>체계적인 학습 관리 시스템</p>
         </div>
 
-        <div class="form-group">
-            <label for="password">비밀번호</label>
-            <input type="password" id="password" name="password" required>
+        <% if (error) { %>
+            <div class="error">⚠️ <%= error %></div>
+        <% } %>
+
+        <form action="/auth/login" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+            <div class="form-group">
+                <label for="username">아이디</label>
+                <input type="text" id="username" name="username" placeholder="아이디를 입력하세요" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
+            </div>
+
+            <button type="submit" class="button-primary">로그인</button>
+        </form>
+
+        <div class="register-link">
+            계정이 없으신가요? <a href="/auth/register">회원가입</a>
         </div>
 
-        <button type="submit">로그인</button>
-    </form>
-
-    <div class="register-link">
-        계정이 없으신가요? <a href="/auth/register">회원가입</a>
+        <div class="features">
+            <div class="feature-item">개인 맞춤 학습 계획</div>
+            <div class="feature-item">실시간 진도 관리</div>
+            <div class="feature-item">PVP 대결 모드</div>
+        </div>
     </div>
-</div>
 </body>
 </html>

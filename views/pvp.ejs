@@ -1,445 +1,349 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PVP - 스터디 플래너</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PVP - 스터디 플래너</title>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f7fa;
+    padding: 24px;
+}
 
-        .header {
-            background: white;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-        }
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
 
-        .header h1 {
-            color: #667eea;
-            font-size: 28px;
-            text-align: center;
-        }
+.page-header {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border: 1px solid #e8e8e8;
+}
 
-        .nav-menu {
-            background: white;
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #262626;
+}
 
-        .nav-menu a {
-            padding: 12px 24px;
-            background: #f0f0f0;
-            color: #333;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
+.nav-menu {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    border: 1px solid #e8e8e8;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
 
-        .nav-menu a:hover, .nav-menu a.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transform: translateY(-2px);
-        }
+.nav-menu a {
+    padding: 10px 18px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    color: #595959;
+    font-weight: 500;
+}
 
-        .pvp-container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        }
+.nav-menu a.active,
+.nav-menu a:hover {
+    background: #e6f7ff;
+    color: #1890ff;
+}
 
-        .match-info {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-bottom: 30px;
-            padding: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            color: white;
-        }
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 24px;
+    border: 1px solid #e8e8e8;
+}
 
-        .player {
-            text-align: center;
-            flex: 1;
-        }
+.match-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
 
-        .player-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
+.player {
+    text-align: center;
+    flex: 1;
+}
 
-        .player-status {
-            font-size: 14px;
-            opacity: 0.9;
-        }
+.player-name {
+    font-size: 18px;
+    font-weight: 600;
+}
 
-        .vs {
-            font-size: 36px;
-            font-weight: bold;
-            padding: 0 30px;
-        }
+.player-status {
+    font-size: 13px;
+    color: #8c8c8c;
+}
 
-        .timer {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 15px;
-        }
+.vs {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1890ff;
+}
 
-        .timer-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-        }
+.timer {
+    text-align: center;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
 
-        .timer-display {
-            font-size: 48px;
-            font-weight: bold;
-            color: #667eea;
-        }
+.timer-label {
+    font-size: 13px;
+    color: #8c8c8c;
+}
 
-        .timer-display.warning {
-            color: #f5576c;
-            animation: pulse 1s infinite;
-        }
+.timer-display {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1890ff;
+}
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
+.timer-display.warning {
+    color: #ff4d4f;
+}
 
-        .problem-section {
-            margin-bottom: 30px;
-        }
+.problem-question {
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    line-height: 1.7;
+}
 
-        .problem-question {
-            background: #f8f9fa;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            line-height: 1.8;
-            font-size: 18px;
-            color: #333;
-        }
+.options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 30px;
-        }
+.option {
+    border: 1px solid #f0f0f0;
+    background: #fafafa;
+    border-radius: 6px;
+    padding: 14px;
+    cursor: pointer;
+    display: flex;
+    gap: 12px;
+}
 
-        .option {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 2px solid transparent;
-        }
+.option:hover {
+    border-color: #1890ff;
+    background: #e6f7ff;
+}
 
-        .option:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
-        }
+.option.selected {
+    border-color: #1890ff;
+    background: #e6f7ff;
+}
 
-        .option.selected {
-            border-color: #667eea;
-            background: #e3f2fd;
-        }
+.option input {
+    cursor: pointer;
+}
 
-        .option input[type="radio"] {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-        }
+.submit-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    background: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
 
-        .option-text {
-            flex: 1;
-            font-size: 16px;
-            color: #333;
-        }
+.submit-btn:disabled {
+    background: #d9d9d9;
+    cursor: not-allowed;
+}
 
-        .submit-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+.result-container {
+    text-align: center;
+    padding: 40px;
+    border-radius: 8px;
+    background: #fafafa;
+    border: 1px solid #f0f0f0;
+}
 
-        .submit-btn:hover {
-            transform: translateY(-2px);
-        }
+.result-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
 
-        .submit-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
+.result-win { color: #52c41a; }
+.result-lose { color: #ff4d4f; }
+.result-draw { color: #faad14; }
 
-        .result-container {
-            background: #f8f9fa;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-        }
+.result-detail {
+    font-size: 15px;
+    color: #595959;
+    margin-bottom: 24px;
+}
 
-        .result-win {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        }
+.button-group {
+    display: flex;
+    gap: 12px;
+}
 
-        .result-lose {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-        }
+.btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+}
 
-        .result-draw {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        }
+.btn-primary {
+    background: #1890ff;
+    color: white;
+}
 
-        .result-title {
-            font-size: 48px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
+.btn-secondary {
+    background: #fafafa;
+    border: 1px solid #d9d9d9;
+    color: #595959;
+}
 
-        .result-win .result-title {
-            color: #155724;
-        }
-
-        .result-lose .result-title {
-            color: #721c24;
-        }
-
-        .result-draw .result-title {
-            color: #856404;
-        }
-
-        .result-detail {
-            font-size: 20px;
-            color: #666;
-            margin-bottom: 30px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 15px;
-        }
-
-        .back-btn {
-            flex: 1;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .rematch-btn {
-            flex: 1;
-            padding: 15px;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .waiting-message {
-            text-align: center;
-            padding: 60px 20px;
-            font-size: 18px;
-            color: #666;
-        }
-
-        .loading {
-            display: inline-block;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+.waiting {
+    text-align: center;
+    padding: 60px 20px;
+    color: #8c8c8c;
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚔️ PVP 대결</h1>
-        </div>
+<div class="container">
 
-        <div class="nav-menu">
-            <a href="/">홈</a>
-            <a href="/todo">할 일</a>
-            <a href="/calendar">달력</a>
-            <a href="/ranking">랭킹</a>
-            <a href="/problem">문제 풀이</a>
-            <a href="/pvp" class="active">PVP</a>
-        </div>
+<div class="page-header">
+    <h1>⚔️ PVP 대결</h1>
+</div>
 
-        <div class="pvp-container">
-            <% if (match && match.status === 'in_progress') { %>
-                <div class="match-info">
-                    <div class="player">
-                        <div class="player-name"><%= user.username %></div>
-                        <div class="player-status">나</div>
-                    </div>
-                    <div class="vs">VS</div>
-                    <div class="player">
-                        <div class="player-name"><%= opponent.username %></div>
-                        <div class="player-status">상대방</div>
-                    </div>
-                </div>
+<div class="nav-menu">
+    <a href="/">홈</a>
+    <a href="/todo">할 일</a>
+    <a href="/calendar">달력</a>
+    <a href="/ranking">랭킹</a>
+    <a href="/problem">문제 풀이</a>
+    <a href="/pvp" class="active">PVP</a>
+</div>
 
-                <div class="timer">
-                    <div class="timer-label">남은 시간</div>
-                    <div class="timer-display" id="timer">5:00</div>
-                </div>
+<div class="card">
 
-                <div class="problem-section">
-                    <div class="problem-question">
-                        <%= problem.question %>
-                    </div>
+<% if (match && match.status === 'in_progress') { %>
 
-                    <form id="pvpForm" method="POST" action="/pvp/submit">
-                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <input type="hidden" name="match_id" value="<%= match.id %>">
-                        
-                        <div class="options-container">
-                            <% for (let i = 1; i <= 5; i++) { %>
-                                <label class="option" onclick="selectOption(this)">
-                                    <input type="radio" name="answer" value="<%= i %>" required>
-                                    <span class="option-text">
-                                        <%= i %>. <%= problem['option' + i] %>
-                                    </span>
-                                </label>
-                            <% } %>
-                        </div>
-
-                        <button type="submit" class="submit-btn" id="submitBtn">정답 제출</button>
-                    </form>
-                </div>
-
-                <script>
-                    let timeLeft = 300;
-                    const timerDisplay = document.getElementById('timer');
-                    const submitBtn = document.getElementById('submitBtn');
-
-                    const timer = setInterval(() => {
-                        timeLeft--;
-                        const minutes = Math.floor(timeLeft / 60);
-                        const seconds = timeLeft % 60;
-                        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-
-                        if (timeLeft <= 30) {
-                            timerDisplay.classList.add('warning');
-                        }
-
-                        if (timeLeft <= 0) {
-                            clearInterval(timer);
-                            submitBtn.disabled = true;
-                            alert('시간이 종료되었습니다!');
-                            document.getElementById('pvpForm').submit();
-                        }
-                    }, 1000);
-
-                    function selectOption(label) {
-                        document.querySelectorAll('.option').forEach(opt => {
-                            opt.classList.remove('selected');
-                        });
-                        label.classList.add('selected');
-                    }
-                </script>
-
-            <% } else if (match && match.status === 'finished') { %>
-                <% 
-                    let resultClass = 'result-draw';
-                    let resultText = '무승부';
-                    let resultEmoji = '🤝';
-                    
-                    if (match.winner_id === user.id) {
-                        resultClass = 'result-win';
-                        resultText = '승리!';
-                        resultEmoji = '🎉';
-                    } else if (match.winner_id === opponent.id) {
-                        resultClass = 'result-lose';
-                        resultText = '패배';
-                        resultEmoji = '😢';
-                    }
-                %>
-                
-                <div class="result-container <%= resultClass %>">
-                    <div class="result-title"><%= resultEmoji %> <%= resultText %></div>
-                    <div class="result-detail">
-                        정답: <%= problem.answer %>번<br>
-                        <%= user.username %>: <%= myAnswer || '미제출' %><br>
-                        <%= opponent.username %>: <%= opponentAnswer || '미제출' %>
-                    </div>
-                    
-                    <div class="button-group">
-                        <a href="/ranking" class="back-btn">랭킹 보기</a>
-                        <button class="rematch-btn" onclick="location.href='/pvp?opponent=<%= opponent.id %>'">
-                            재대결
-                        </button>
-                    </div>
-                </div>
-
-            <% } else { %>
-                <div class="waiting-message">
-                    <div class="loading" style="font-size: 48px;">⏳</div>
-                    <p style="margin-top: 20px;">대결 상대를 찾고 있습니다...</p>
-                    <p style="margin-top: 10px; color: #999;">랭킹에서 상대를 선택하거나 랜덤 매칭을 기다려주세요.</p>
-                    <div style="margin-top: 30px;">
-                        <a href="/ranking" class="back-btn" style="max-width: 300px; margin: 0 auto;">
-                            랭킹에서 상대 선택하기
-                        </a>
-                    </div>
-                </div>
-            <% } %>
-        </div>
+<div class="match-info">
+    <div class="player">
+        <div class="player-name"><%= user.username %></div>
+        <div class="player-status">나</div>
     </div>
+    <div class="vs">VS</div>
+    <div class="player">
+        <div class="player-name"><%= opponent.username %></div>
+        <div class="player-status">상대</div>
+    </div>
+</div>
+
+<div class="timer">
+    <div class="timer-label">남은 시간</div>
+    <div class="timer-display" id="timer">5:00</div>
+</div>
+
+<div class="problem-question">
+    <%= problem.question %>
+</div>
+
+<form id="pvpForm" method="POST" action="/pvp/submit">
+<input type="hidden" name="_csrf" value="<%= csrfToken %>">
+<input type="hidden" name="match_id" value="<%= match.id %>">
+
+<div class="options-container">
+<% for(let i=1;i<=5;i++){ %>
+<label class="option" onclick="selectOption(this)">
+    <input type="radio" name="answer" value="<%= i %>" required>
+    <span><%= i %>. <%= problem['option'+i] %></span>
+</label>
+<% } %>
+</div>
+
+<button class="submit-btn" id="submitBtn">정답 제출</button>
+</form>
+
+<script>
+let timeLeft = 300;
+const timer = document.getElementById('timer');
+const btn = document.getElementById('submitBtn');
+
+setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    timer.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if(timeLeft <= 30) timer.classList.add('warning');
+    if(timeLeft <= 0){
+        btn.disabled = true;
+        document.getElementById('pvpForm').submit();
+    }
+},1000);
+
+function selectOption(el){
+    document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+}
+</script>
+
+<% } else if (match && match.status === 'finished') { %>
+
+<div class="result-container">
+    <div class="result-title <%= match.winner_id === user.id ? 'result-win' : match.winner_id === opponent.id ? 'result-lose' : 'result-draw' %>">
+        <%= match.winner_id === user.id ? '🎉 승리' : match.winner_id === opponent.id ? '패배' : '무승부' %>
+    </div>
+    <div class="result-detail">
+        정답: <%= problem.answer %>번<br>
+        나: <%= myAnswer || '미제출' %><br>
+        상대: <%= opponentAnswer || '미제출' %>
+    </div>
+    <div class="button-group">
+        <a href="/ranking" class="btn btn-secondary">랭킹</a>
+        <a href="/pvp?opponent=<%= opponent.id %>" class="btn btn-primary">재대결</a>
+    </div>
+</div>
+
+<% } else { %>
+
+<div class="waiting">
+    <p>대결 상대를 찾고 있습니다</p>
+    <a href="/ranking" class="btn btn-primary" style="margin-top:20px; display:inline-block;">랭킹에서 선택</a>
+</div>
+
+<% } %>
+
+</div>
+</div>
 </body>
 </html>

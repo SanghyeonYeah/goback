@@ -1,49 +1,367 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>마이페이지 - 스터디 플래너</title>
-  <style>
-    body { font-family: sans-serif; padding: 30px; background: #f0f2f5; }
-    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; }
-    h1 { color: #667eea; text-align: center; margin-bottom: 20px; }
-    label { display: block; margin: 10px 0 5px; }
-    input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
-    button { margin-top: 20px; width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; }
-    button:hover { background: #764ba2; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - 스터디 플래너</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .nav-menu {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu a {
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #595959;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a.active,
+        .nav-menu a:hover {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            border: 1px solid #e8e8e8;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .subject-item {
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .subject-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #262626;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .subject-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .subject-input:hover {
+            border-color: #40a9ff;
+        }
+
+        .subject-input:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+        }
+
+        .grade-hint {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+
+        .period-section {
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .period-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #262626;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .period-section input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .period-section .hint {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-top: 8px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #40a9ff;
+        }
+
+        .submit-btn:active {
+            background: #096dd9;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            color: #1890ff;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: #e6f7ff;
+            border-color: #91d5ff;
+        }
+
+        .info-box {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-box-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1890ff;
+            margin-bottom: 8px;
+        }
+
+        .info-box-text {
+            font-size: 13px;
+            color: #595959;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 600px) {
+            .subjects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>마이페이지</h1>
+<div class="container">
 
-    <form action="/user/update-goals" method="POST">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <label for="korean">국어</label>
-      <input type="number" name="korean" min="1" max="5" value="<%= goals ? goals.korean : 3 %>" required>
+    <div class="page-header">
+        <h1>⚙️ 마이페이지</h1>
+        <p>목표 등급과 학습 기간을 설정하세요</p>
+    </div>
 
-      <label for="math">수학</label>
-      <input type="number" name="math" min="1" max="5" value="<%= goals ? goals.math : 3 %>" required>
+    <div class="nav-menu">
+        <a href="/home">홈</a>
+        <a href="/todo">할 일</a>
+        <a href="/calendar">달력</a>
+        <a href="/ranking">랭킹</a>
+        <a href="/problem">문제 풀이</a>
+        <a href="/pvp">PVP</a>
+        <a href="/mypage" class="active">마이페이지</a>
+    </div>
 
-      <label for="social">사회</label>
-      <input type="number" name="social" min="1" max="5" value="<%= goals ? goals.social : 3 %>" required>
+    <div class="info-box">
+        <div class="info-box-title">💡 목표 등급이란?</div>
+        <div class="info-box-text">
+            각 과목별로 달성하고 싶은 목표 등급(1~5등급)을 설정하면, 
+            시스템이 자동으로 학습 계획을 생성해줍니다.
+        </div>
+    </div>
 
-      <label for="science">과학</label>
-      <input type="number" name="science" min="1" max="5" value="<%= goals ? goals.science : 3 %>" required>
+    <div class="card">
+        <div class="card-title">📊 과목별 목표 등급 설정</div>
 
-      <label for="english">영어</label>
-      <input type="number" name="english" min="1" max="5" value="<%= goals ? goals.english : 3 %>" required>
+        <form action="/user/update-goals" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-      <label for="history">역사</label>
-      <input type="number" name="history" min="1" max="5" value="<%= goals ? goals.history : 3 %>" required>
+            <div class="subjects-grid">
+                <div class="subject-item">
+                    <label class="subject-label" for="korean">📝 국어</label>
+                    <input type="number" 
+                           class="subject-input" 
+                           id="korean" 
+                           name="korean" 
+                           min="1" 
+                           max="5" 
+                           value="<%= goals ? goals.korean : 3 %>" 
+                           required>
+                    <div class="grade-hint">1등급 ~ 5등급</div>
+                </div>
 
-      <label for="studyPeriod">학습 기간 (일)</label>
-      <input type="number" name="studyPeriod" min="1" max="90" value="<%= goals ? goals.study_period : 14 %>" required>
+                <div class="subject-item">
+                    <label class="subject-label" for="math">🔢 수학</label>
+                    <input type="number" 
+                           class="subject-input" 
+                           id="math" 
+                           name="math" 
+                           min="1" 
+                           max="5" 
+                           value="<%= goals ? goals.math : 3 %>" 
+                           required>
+                    <div class="grade-hint">1등급 ~ 5등급</div>
+                </div>
 
-      <button type="submit">목표 등급 저장/재설정</button>
-    </form>
+                <div class="subject-item">
+                    <label class="subject-label" for="social">🌍 사회</label>
+                    <input type="number" 
+                           class="subject-input" 
+                           id="social" 
+                           name="social" 
+                           min="1" 
+                           max="5" 
+                           value="<%= goals ? goals.social : 3 %>" 
+                           required>
+                    <div class="grade-hint">1등급 ~ 5등급</div>
+                </div>
 
-    <a href="/home" style="display:block; margin-top:20px; text-align:center; color:#667eea;">← 홈으로 돌아가기</a>
-  </div>
+                <div class="subject-item">
+                    <label class="subject-label" for="science">🔬 과학</label>
+                    <input type="number" 
+                           class="subject-input" 
+                           id="science" 
+                           name="science" 
+                           min="1" 
+                           max="5" 
+                           value="<%= goals ? goals.science : 3 %>" 
+                           required>
+                    <div class="grade-hint">1등급 ~ 5등급</div>
+                </div>
+
+                <div class="subject-item">
+                    <label class="subject-label" for="english">🇬🇧 영어</label>
+                    <input type="number" 
+                           class="subject-input" 
+                           id="english" 
+                           name="english" 
+                           min="1" 
+                           max="5" 
+                           value="<%= goals ? goals.english : 3 %>" 
+                           required>
+                    <div class="grade-hint">1등급 ~ 5등급</div>
+                </div>
+
+                <div class="subject-item">
+                    <label class="subject-label" for="history">📜 역사</label>
+                    <input type="number" 
+                           class="subject-input" 
+                           id="history" 
+                           name="history" 
+                           min="1" 
+                           max="5" 
+                           value="<%= goals ? goals.history : 3 %>" 
+                           required>
+                    <div class="grade-hint">1등급 ~ 5등급</div>
+                </div>
+            </div>
+
+            <div class="period-section">
+                <label for="studyPeriod">⏰ 학습 기간 설정</label>
+                <input type="number" 
+                       id="studyPeriod" 
+                       name="studyPeriod" 
+                       min="1" 
+                       max="90" 
+                       value="<%= goals ? goals.study_period : 14 %>" 
+                       required>
+                <div class="hint">목표를 달성하고 싶은 기간을 일 단위로 입력하세요 (1~90일)</div>
+            </div>
+
+            <button type="submit" class="submit-btn">💾 목표 저장하기</button>
+        </form>
+    </div>
+
+    <a href="/home" class="back-link">← 홈으로 돌아가기</a>
+
+</div>
 </body>
 </html>

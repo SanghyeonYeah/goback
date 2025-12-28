@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>랭킹 - 스터디 플래너</title>
+
     <style>
         * {
             margin: 0;
@@ -12,82 +13,87 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
         }
 
         .container {
             max-width: 1000px;
             margin: 0 auto;
+        }
+
+        .page-header {
             background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8e8e8;
         }
 
-        h1 {
-            color: #667eea;
-            margin-bottom: 30px;
-            font-size: 32px;
-            text-align: center;
+        .page-header h1 {
+            color: #262626;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
-        .tab-container {
+        .page-header p {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .tabs {
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
             display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #e0e0e0;
+            gap: 8px;
         }
 
         .tab {
-            padding: 15px 30px;
-            background: transparent;
+            flex: 1;
+            padding: 12px;
             border: none;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .tab:hover {
-            color: #667eea;
+            font-size: 14px;
+            font-weight: 500;
+            color: #595959;
+            border-radius: 4px;
+            background: transparent;
+            transition: 0.3s;
         }
 
         .tab.active {
-            color: #667eea;
+            background: #1890ff;
+            color: white;
         }
 
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .tab:hover {
+            background: #fafafa;
         }
 
         .season-info {
-            background: #f5f7ff;
+            background: white;
             padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
+            border-radius: 8px;
+            margin-bottom: 24px;
             text-align: center;
+            border: 1px solid #e8e8e8;
         }
 
         .season-info h2 {
-            color: #667eea;
-            font-size: 20px;
-            margin-bottom: 10px;
+            color: #1890ff;
+            font-size: 18px;
+            margin-bottom: 6px;
         }
 
         .season-info p {
-            color: #666;
-            font-size: 14px;
+            font-size: 13px;
+            color: #8c8c8c;
         }
 
         .ranking-list {
@@ -95,46 +101,26 @@
         }
 
         .ranking-item {
-            background: #f9f9f9;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 12px;
+            background: #fafafa;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
-            gap: 20px;
-            border: 2px solid #e0e0e0;
-            transition: all 0.3s;
-            cursor: pointer;
+            gap: 16px;
+            border: 1px solid #f0f0f0;
+            transition: 0.3s;
         }
 
         .ranking-item:hover {
-            border-color: #667eea;
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transform: translateX(2px);
         }
 
-        .rank {
-            font-size: 28px;
-            font-weight: 700;
-            width: 60px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .rank-1 {
-            color: #FFD700;
-        }
-
-        .rank-2 {
-            color: #C0C0C0;
-        }
-
-        .rank-3 {
-            color: #CD7F32;
-        }
-
-        .rank-other {
-            color: #667eea;
+        .ranking-item.my-rank {
+            background: #e6f7ff;
+            border-color: #91d5ff;
         }
 
         .user-info {
@@ -142,94 +128,123 @@
         }
 
         .username {
-            font-size: 18px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
+            font-size: 16px;
         }
 
         .user-diploma {
-            font-size: 14px;
-            color: #999;
+            font-size: 13px;
+            color: #8c8c8c;
         }
 
         .score {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
-            color: #667eea;
-            margin-right: 15px;
+            color: #1890ff;
         }
 
         .pvp-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 8px 16px;
+            background: #1890ff;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: 600;
-            transition: transform 0.2s;
-            flex-shrink: 0;
+            font-size: 13px;
+            transition: 0.3s;
         }
 
         .pvp-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .my-rank {
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            border-color: #667eea;
+            background: #40a9ff;
         }
 
         .back-link {
             display: inline-block;
-            margin-top: 20px;
-            color: #667eea;
+            margin-top: 24px;
+            padding: 10px 20px;
+            background: white;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            color: #1890ff;
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
         }
 
         .back-link:hover {
-            color: #764ba2;
+            background: #e6f7ff;
         }
     </style>
 </head>
+
 <body>
+<div class="container">
+
+    <div class="page-header">
+        <h1>🏆 랭킹</h1>
+        <p>학습 성과를 비교하고 경쟁하세요</p>
+    </div>
+
+    <!-- 주간 랭킹 제거 -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('season')">시즌 랭킹</button>
+        <button class="tab" onclick="switchTab('daily')">일일 랭킹</button>
+    </div>
+
+    <div class="season-info">
+        <% if (currentSeason) { %>
+            <h2>🎯 <%= currentSeason.name %></h2>
+            <p><%= currentSeason.start_date %> - <%= currentSeason.end_date %></p>
+            <% if (currentSeason.description) { %>
+                <p style="margin-top:6px; color:#595959;"><%= currentSeason.description %></p>
+            <% } %>
+        <% } else { %>
+            <h2>🎯 시즌 정보 없음</h2>
+            <p>현재 진행 중인 시즌이 없습니다</p>
+        <% } %>
+    </div>
+
     <ul class="ranking-list">
         <% rankings.forEach((user, index) => { %>
             <li class="ranking-item <%= user.id === session.user.id ? 'my-rank' : '' %>">
-            <div class="rank <%= index < 3 ? 'rank-' + (index+1) : 'rank-other' %>">
-                <%= index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index+1 %>
-            </div>
-            <div class="user-info">
-                <div class="username"><%= user.username %> <%= user.id === session.user.id ? '(나)' : '' %></div>
-                <div class="user-diploma"><%= user.diploma %></div>
-            </div>
-            <div class="score"><%= user.total_score %>점</div>
-            <% if(user.id !== session.user.id){ %>
-                <button class="pvp-btn" onclick="challengePVP('<%= user.username %>')">PVP 도전</button>
-            <% } %>
+                <div>
+                    <%= index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1 %>
+                </div>
+
+                <div class="user-info">
+                    <div class="username">
+                        <%= user.username %>
+                        <%= user.id === session.user.id ? '(나)' : '' %>
+                    </div>
+                    <div class="user-diploma"><%= user.diploma %></div>
+                </div>
+
+                <div class="score"><%= user.total_score %>점</div>
+
+                <% if (user.id !== session.user.id) { %>
+                    <button class="pvp-btn"
+                            onclick="challengePVP('<%= user.id %>', '<%= user.username %>')">
+                        ⚔️ 도전
+                    </button>
+                <% } %>
             </li>
         <% }) %>
     </ul>
 
-    <script>
-        function switchTab(type) {
-            const tabs = document.querySelectorAll('.tab');
-            tabs.forEach(tab => tab.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // 실제로는 서버에서 데이터를 가져와야 함
-            console.log('Switch to ' + type + ' ranking');
-        }
+    <a href="/home" class="back-link">← 홈으로 돌아가기</a>
+</div>
 
-        function challengePVP(userId) {
-            if (confirm(`${userId}에게 PVP를 신청하시겠습니까?`)) {
-                // PVP 페이지로 이동
-                window.location.href = `/pvp/challenge/${userId}`;
-            }
+<script>
+    function switchTab(type) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        console.log('Switch to', type);
+    }
+
+    function challengePVP(userId, username) {
+        if (confirm(`${username}님에게 PVP를 신청하시겠습니까?`)) {
+            location.href = `/pvp/challenge/${userId}`;
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>

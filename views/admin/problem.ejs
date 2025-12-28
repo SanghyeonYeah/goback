@@ -12,252 +12,382 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
         }
 
         .container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
-        h1 {
-            text-align: center;
-            color: #667eea;
-            margin-bottom: 30px;
-            font-size: 32px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-            justify-content: center;
-        }
-
-        .nav-links a {
-            padding: 10px 20px;
-            background: #f0f0f0;
-            color: #333;
-            text-decoration: none;
+        .page-header {
+            background: white;
+            padding: 24px;
             border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
             font-weight: 600;
-            transition: background 0.3s;
+            color: #262626;
+            margin-bottom: 8px;
         }
 
-        .nav-links a:hover, .nav-links a.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .page-header p {
+            color: #8c8c8c;
+            font-size: 14px;
         }
 
-        .success {
-            background: #d4edda;
-            color: #155724;
+        .nav-menu {
+            background: white;
             padding: 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 12px;
+        .nav-menu a {
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #595959;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a.active,
+        .nav-menu a:hover {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+
+        .alert-error {
+            background: #fff2f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+
+        .card {
+            background: white;
             border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #fcc;
+            padding: 24px;
+            border: 1px solid #e8e8e8;
+            margin-bottom: 24px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        label {
+        .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
+            color: #262626;
+            font-weight: 500;
+            font-size: 14px;
         }
 
-        input[type="text"],
-        input[type="number"],
-        select,
-        textarea {
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
             font-family: inherit;
         }
 
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
+        .form-group input:hover,
+        .form-group select:hover,
+        .form-group textarea:hover {
+            border-color: #40a9ff;
         }
 
-        textarea {
-            min-height: 100px;
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
             resize: vertical;
         }
 
         .options-container {
-            display: grid;
-            gap: 10px;
-        }
-
-        .option-group {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-item {
+            display: flex;
+            gap: 12px;
             align-items: center;
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
         }
 
-        .option-group input[type="text"] {
-            flex: 1;
-        }
-
-        .option-group input[type="radio"] {
+        .option-item input[type="radio"] {
             width: 20px;
             height: 20px;
             cursor: pointer;
+            flex-shrink: 0;
         }
 
-        button {
+        .option-item input[type="text"] {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .option-number {
+            font-weight: 600;
+            color: #595959;
+            min-width: 24px;
+        }
+
+        .submit-btn {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1890ff;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.3s;
             margin-top: 10px;
         }
 
-        button:hover {
-            transform: translateY(-2px);
+        .submit-btn:hover {
+            background: #40a9ff;
+        }
+
+        .submit-btn:active {
+            background: #096dd9;
         }
 
         .logout-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: white;
+            color: #ff4d4f;
+            border: 1px solid #ff4d4f;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 16px;
+        }
+
+        .logout-btn:hover {
+            background: #fff2f0;
+        }
+
+        .hint-text {
+            font-size: 13px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>문제 등록</h1>
+        <div class="page-header">
+            <h1>📝 문제 등록</h1>
+            <p>새로운 문제를 등록하고 관리하세요</p>
+        </div>
 
-        <div class="nav-links">
+        <div class="nav-menu">
             <a href="/admin/problem" class="active">문제 등록</a>
             <a href="/admin/season">시즌 관리</a>
-            <a href="/">홈으로</a>
+            <a href="/home">홈으로</a>
         </div>
 
         <% if (success) { %>
-            <div class="success"><%= success %></div>
+            <div class="alert alert-success">✓ <%= success %></div>
         <% } %>
         <% if (error) { %>
-            <div class="error"><%= error %></div>
+            <div class="alert alert-error">⚠️ <%= error %></div>
         <% } %>
 
-        <form action="/admin/problem" method="POST">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            
-            <div class="form-group">
-                <label for="subject">과목</label>
-                <select id="subject" name="subject" required>
-                    <option value="">과목 선택</option>
-                    <option value="국어">국어</option>
-                    <option value="수학">수학</option>
-                    <option value="영어">영어</option>
-                    <option value="사회">사회</option>
-                    <option value="과학">과학</option>
-                    <option value="역사">역사</option>
-                    <option value="물리">물리</option>
-                    <option value="화학">화학</option>
-                    <option value="생명과학">생명과학</option>
-                </select>
-            </div>
+        <div class="card">
+            <form action="/admin/problem" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                
+                <div class="form-section">
+                    <div class="form-section-title">📚 기본 정보</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="subject">과목 *</label>
+                            <select id="subject" name="subject" required>
+                                <option value="">과목 선택</option>
+                                <option value="국어">📝 국어</option>
+                                <option value="수학">🔢 수학</option>
+                                <option value="영어">🇬🇧 영어</option>
+                                <option value="사회">🌍 사회</option>
+                                <option value="과학">🔬 과학</option>
+                                <option value="역사">📜 역사</option>
+                                <option value="물리">⚛️ 물리</option>
+                                <option value="화학">🧪 화학</option>
+                                <option value="생명과학">🧬 생명과학</option>
+                            </select>
+                        </div>
 
-            <div class="form-group">
-                <label for="type">문제 유형</label>
-                <select id="type" name="type" required>
-                    <option value="">유형 선택</option>
-                    <option value="모의고사">모의고사</option>
-                    <option value="문제집">문제집</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="difficulty">난이도</label>
-                <select id="difficulty" name="difficulty" required>
-                    <option value="">난이도 선택</option>
-                    <option value="쉬움">쉬움</option>
-                    <option value="보통">보통</option>
-                    <option value="어려움">어려움</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="points">배점 (2-5점)</label>
-                <input type="number" id="points" name="points" min="2" max="5" required placeholder="배점을 입력하세요">
-            </div>
-
-            <div class="form-group">
-                <label for="question">문제</label>
-                <textarea id="question" name="question" required placeholder="문제를 입력하세요"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>선택지</label>
-                <div class="options-container">
-                    <div class="option-group">
-                        <input type="radio" name="answer" value="1" required>
-                        <input type="text" name="option1" placeholder="1번 선택지" required>
+                        <div class="form-group">
+                            <label for="type">문제 유형 *</label>
+                            <select id="type" name="type" required>
+                                <option value="">유형 선택</option>
+                                <option value="모의고사">📋 모의고사</option>
+                                <option value="문제집">📖 문제집</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="option-group">
-                        <input type="radio" name="answer" value="2" required>
-                        <input type="text" name="option2" placeholder="2번 선택지" required>
-                    </div>
-                    <div class="option-group">
-                        <input type="radio" name="answer" value="3" required>
-                        <input type="text" name="option3" placeholder="3번 선택지" required>
-                    </div>
-                    <div class="option-group">
-                        <input type="radio" name="answer" value="4" required>
-                        <input type="text" name="option4" placeholder="4번 선택지" required>
-                    </div>
-                    <div class="option-group">
-                        <input type="radio" name="answer" value="5" required>
-                        <input type="text" name="option5" placeholder="5번 선택지" required>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="difficulty">난이도 *</label>
+                            <select id="difficulty" name="difficulty" required>
+                                <option value="">난이도 선택</option>
+                                <option value="쉬움">⭐ 쉬움</option>
+                                <option value="보통">⭐⭐ 보통</option>
+                                <option value="어려움">⭐⭐⭐ 어려움</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="points">배점 *</label>
+                            <select id="points" name="points" required>
+                                <option value="">배점 선택</option>
+                                <option value="2">2점</option>
+                                <option value="3">3점</option>
+                                <option value="4">4점</option>
+                                <option value="5">5점</option>
+                            </select>
+                            <div class="hint-text">2점 ~ 5점 사이로 선택</div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="explanation">해설</label>
-                <textarea id="explanation" name="explanation" placeholder="문제 해설을 입력하세요"></textarea>
-            </div>
+                <div class="form-section">
+                    <div class="form-section-title">❓ 문제 내용</div>
+                    
+                    <div class="form-group">
+                        <label for="question">문제 *</label>
+                        <textarea id="question" name="question" required placeholder="문제를 입력하세요"></textarea>
+                    </div>
+                </div>
 
-            <button type="submit">문제 등록</button>
-        </form>
+                <div class="form-section">
+                    <div class="form-section-title">📝 선택지 및 정답</div>
+                    <div class="hint-text" style="margin-bottom: 12px;">라디오 버튼을 클릭하여 정답을 선택하세요</div>
+                    
+                    <div class="options-container">
+                        <div class="option-item">
+                            <input type="radio" name="answer" value="1" id="answer1" required>
+                            <span class="option-number">①</span>
+                            <input type="text" name="option1" placeholder="1번 선택지를 입력하세요" required>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="answer" value="2" id="answer2" required>
+                            <span class="option-number">②</span>
+                            <input type="text" name="option2" placeholder="2번 선택지를 입력하세요" required>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="answer" value="3" id="answer3" required>
+                            <span class="option-number">③</span>
+                            <input type="text" name="option3" placeholder="3번 선택지를 입력하세요" required>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="answer" value="4" id="answer4" required>
+                            <span class="option-number">④</span>
+                            <input type="text" name="option4" placeholder="4번 선택지를 입력하세요" required>
+                        </div>
+                        <div class="option-item">
+                            <input type="radio" name="answer" value="5" id="answer5" required>
+                            <span class="option-number">⑤</span>
+                            <input type="text" name="option5" placeholder="5번 선택지를 입력하세요" required>
+                        </div>
+                    </div>
+                </div>
 
-        <form action="/auth/logout" method="POST">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button type="submit" class="logout-btn">로그아웃</button>
-        </form>
+                <div class="form-section">
+                    <div class="form-section-title">💡 해설</div>
+                    
+                    <div class="form-group">
+                        <label for="explanation">해설 (선택)</label>
+                        <textarea id="explanation" name="explanation" placeholder="문제 해설을 입력하세요 (선택사항)"></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">💾 문제 등록하기</button>
+            </form>
+
+            <form action="/auth/logout" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="logout-btn">🚪 로그아웃</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

@@ -12,36 +12,94 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
+        }
+
+        .page-header {
             background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8e8e8;
         }
 
-        h1 {
-            color: #667eea;
-            margin-bottom: 30px;
-            font-size: 32px;
-            text-align: center;
+        .page-header h1 {
+            color: #262626;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
-        .problem-filters {
-            background: #f5f7ff;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
+        .page-header p {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            font-size: 24px;
+        }
+
+        .stat-label {
+            color: #8c8c8c;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #262626;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .filters-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            margin-bottom: 24px;
+        }
+
+        .filters-title {
+            color: #262626;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
         }
 
         .filter-group {
@@ -51,23 +109,45 @@
         }
 
         .filter-group label {
-            font-weight: 600;
-            color: #667eea;
+            color: #595959;
             font-size: 14px;
+            font-weight: 500;
         }
 
         .filter-group select {
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
             font-size: 14px;
             cursor: pointer;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .filter-group select:hover {
+            border-color: #40a9ff;
         }
 
         .filter-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+        }
+
+        .problems-section {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .section-title {
+            color: #262626;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
         }
 
         .problem-list {
@@ -75,233 +155,259 @@
         }
 
         .problem-item {
-            background: #f9f9f9;
-            padding: 25px;
-            margin-bottom: 15px;
-            border-radius: 12px;
-            border: 2px solid #e0e0e0;
+            background: #fafafa;
+            padding: 20px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+            border: 1px solid #f0f0f0;
             transition: all 0.3s;
             cursor: pointer;
         }
 
         .problem-item:hover {
-            border-color: #667eea;
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            background: white;
+            border-color: #d9d9d9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateX(2px);
+        }
+
+        .problem-item.solved {
+            background: #f6ffed;
+            border-color: #b7eb8f;
         }
 
         .problem-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .problem-number {
-            font-size: 18px;
-            font-weight: 700;
-            color: #667eea;
+            color: #1890ff;
+            font-size: 16px;
+            font-weight: 600;
         }
 
-        .problem-score {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .problem-badges {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .score-badge {
+            padding: 4px 12px;
+            background: #1890ff;
             color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .solved-badge {
+            padding: 4px 12px;
+            background: #52c41a;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
         }
 
         .problem-info {
             display: flex;
-            gap: 20px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
         }
 
-        .info-badge {
+        .info-tag {
+            padding: 4px 10px;
             background: white;
-            padding: 5px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #666;
-            border: 1px solid #ddd;
+            color: #595959;
+            border-radius: 4px;
+            font-size: 12px;
+            border: 1px solid #e8e8e8;
         }
 
         .problem-title {
-            font-size: 16px;
-            color: #333;
-            font-weight: 500;
-            line-height: 1.5;
+            color: #262626;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
         }
 
         .solve-btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px;
+            background: #1890ff;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.2s;
+            transition: all 0.3s;
         }
 
         .solve-btn:hover {
-            transform: translateY(-2px);
+            background: #40a9ff;
         }
 
-        .stats {
-            display: flex;
-            gap: 20px;
-            background: #f5f7ff;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
+        .solve-btn.retry {
+            background: #52c41a;
         }
 
-        .stat-item {
-            flex: 1;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #666;
+        .solve-btn.retry:hover {
+            background: #73d13d;
         }
 
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
         }
 
-        .empty-state-icon {
+        .empty-icon {
             font-size: 64px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-text {
+            color: #8c8c8c;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-subtext {
+            color: #bfbfbf;
+            font-size: 14px;
         }
 
         .back-link {
             display: inline-block;
-            margin-top: 20px;
-            color: #667eea;
+            margin-top: 24px;
+            padding: 10px 20px;
+            background: white;
+            color: #1890ff;
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
+            border-radius: 4px;
+            border: 1px solid #d9d9d9;
+            font-weight: 500;
+            transition: all 0.3s;
         }
 
         .back-link:hover {
-            color: #764ba2;
-        }
-
-        .problem-solved {
-            opacity: 0.6;
-            position: relative;
-        }
-
-        .solved-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #4caf50;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
+            border-color: #1890ff;
+            background: #e6f7ff;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📝 문제 풀이</h1>
+        <div class="page-header">
+            <h1>📝 문제 풀이</h1>
+            <p>다양한 문제를 풀고 실력을 향상시키세요</p>
+        </div>
 
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-value"><%= stats.totalSolved %></div>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">✅</span>
+                </div>
                 <div class="stat-label">푼 문제</div>
+                <div class="stat-value"><%= stats.totalSolved %>개</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value"><%= stats.totalScore %></div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">🏆</span>
+                </div>
                 <div class="stat-label">총 점수</div>
+                <div class="stat-value"><%= stats.totalScore %>점</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value"><%= stats.accuracy %>%</div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">📊</span>
+                </div>
                 <div class="stat-label">정확도</div>
+                <div class="stat-value"><%= stats.accuracy %>%</div>
             </div>
         </div>
 
-        <div class="problem-filters">
-            <div class="filter-group">
-                <label for="subject">과목</label>
-                <select id="subject" onchange="filterProblems()">
-                    <option value="">전체</option>
-                    <option value="국어">국어</option>
-                    <option value="수학">수학</option>
-                    <option value="영어">영어</option>
-                    <option value="사회">사회</option>
-                    <option value="과학">통합과학</option>
-                    <option value="역사">역사</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="difficulty">난이도</label>
-                <select id="difficulty" onchange="filterProblems()">
-                    <option value="">전체</option>
-                    <option value="쉬움">쉬움</option>
-                    <option value="보통">보통</option>
-                    <option value="어려움">어려움</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="type">유형</label>
-                <select id="type" onchange="filterProblems()">
-                    <option value="">전체</option>
-                    <option value="모의고사">모의고사</option>
-                    <option value="문제집">문제집</option>
-                </select>
+        <div class="filters-card">
+            <div class="filters-title">🔍 필터</div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="subject">과목</label>
+                    <select id="subject" onchange="filterProblems()">
+                        <option value="">전체</option>
+                        <option value="국어">국어</option>
+                        <option value="수학">수학</option>
+                        <option value="영어">영어</option>
+                        <option value="사회">사회</option>
+                        <option value="과학">통합과학</option>
+                        <option value="역사">역사</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="difficulty">난이도</label>
+                    <select id="difficulty" onchange="filterProblems()">
+                        <option value="">전체</option>
+                        <option value="쉬움">쉬움</option>
+                        <option value="보통">보통</option>
+                        <option value="어려움">어려움</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="type">유형</label>
+                    <select id="type" onchange="filterProblems()">
+                        <option value="">전체</option>
+                        <option value="모의고사">모의고사</option>
+                        <option value="문제집">문제집</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <% if (problems.length > 0) { %>
-            <ul class="problem-list">
-                <% problems.forEach(problem => { %>
-                    <li class="problem-item <%= problem.solved ? 'problem-solved' : '' %>" 
-                        onclick="location.href='/problem/<%= problem.id %>'">
-                        <% if (problem.solved) { %>
-                            <div class="solved-badge">✓ 완료</div>
-                        <% } %>
-                        <div class="problem-header">
-                            <div class="problem-number">문제 #<%= problem.number %></div>
-                            <div class="problem-score"><%= problem.score %>점</div>
-                        </div>
-                        <div class="problem-info">
-                            <span class="info-badge">📚 <%= problem.subject %></span>
-                            <span class="info-badge">⭐ <%= problem.difficulty %></span>
-                            <span class="info-badge">📖 <%= problem.type %></span>
-                        </div>
-                        <div class="problem-title"><%= problem.title %></div>
-                        <button class="solve-btn" onclick="event.stopPropagation(); location.href='/problem/<%= problem.id %>/solve'">
-                            <%= problem.solved ? '다시 풀기' : '풀이 시작' %>
-                        </button>
-                    </li>
-                <% }); %>
-            </ul>
-        <% } else { %>
-            <div class="empty-state">
-                <div class="empty-state-icon">📚</div>
-                <p>아직 등록된 문제가 없습니다.</p>
-                <p>관리자가 문제를 추가할 때까지 기다려주세요.</p>
-            </div>
-        <% } %>
+        <div class="problems-section">
+            <h2 class="section-title">📚 문제 목록</h2>
+
+            <% if (problems.length > 0) { %>
+                <ul class="problem-list">
+                    <% problems.forEach(problem => { %>
+                        <li class="problem-item <%= problem.solved ? 'solved' : '' %>" 
+                            onclick="location.href='/problem/<%= problem.id %>'">
+                            <div class="problem-header">
+                                <div class="problem-number">문제 #<%= problem.number %></div>
+                                <div class="problem-badges">
+                                    <span class="score-badge"><%= problem.score %>점</span>
+                                    <% if (problem.solved) { %>
+                                        <span class="solved-badge">✓ 완료</span>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <div class="problem-info">
+                                <span class="info-tag">📚 <%= problem.subject %></span>
+                                <span class="info-tag">⭐ <%= problem.difficulty %></span>
+                                <span class="info-tag">📖 <%= problem.type %></span>
+                            </div>
+                            <div class="problem-title"><%= problem.title %></div>
+                            <button class="solve-btn <%= problem.solved ? 'retry' : '' %>" 
+                                    onclick="event.stopPropagation(); location.href='/problem/<%= problem.id %>/solve'">
+                                <%= problem.solved ? '다시 풀기' : '풀이 시작' %>
+                            </button>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } else { %>
+                <div class="empty-state">
+                    <div class="empty-icon">📚</div>
+                    <div class="empty-text">등록된 문제가 없습니다</div>
+                    <div class="empty-subtext">관리자가 문제를 추가할 때까지 기다려주세요</div>
+                </div>
+            <% } %>
+        </div>
 
         <a href="/home" class="back-link">← 홈으로 돌아가기</a>
     </div>

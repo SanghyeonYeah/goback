@@ -12,217 +12,396 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
-        h1 {
-            color: #667eea;
-            margin-bottom: 30px;
-            font-size: 32px;
-            text-align: center;
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8e8e8;
+        }
+
+        .page-header h1 {
+            color: #262626;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .calendar-card {
+            background: white;
+            padding: 32px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
 
         .month-nav {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
         }
 
-        .month-nav button {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
+        .nav-btn {
+            padding: 8px 16px;
+            background: white;
+            color: #1890ff;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: 600;
-            transition: transform 0.2s;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s;
         }
 
-        .month-nav button:hover {
-            transform: translateY(-2px);
+        .nav-btn:hover {
+            border-color: #1890ff;
+            background: #e6f7ff;
         }
 
         .current-month {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
-            color: #333;
+            color: #262626;
+            min-width: 150px;
+            text-align: center;
         }
 
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-top: 20px;
+            gap: 8px;
         }
 
         .day-header {
             text-align: center;
             font-weight: 600;
-            color: #667eea;
-            padding: 15px;
-            background: #f5f7ff;
-            border-radius: 8px;
+            color: #595959;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .day-header.sunday {
+            color: #ff4d4f;
+        }
+
+        .day-header.saturday {
+            color: #1890ff;
         }
 
         .day-cell {
             aspect-ratio: 1;
-            border: 2px solid #ddd;
-            border-radius: 12px;
-            padding: 10px;
+            border: 1px solid #f0f0f0;
+            border-radius: 4px;
+            padding: 12px;
             position: relative;
             cursor: pointer;
             transition: all 0.3s;
             background: white;
+            display: flex;
+            flex-direction: column;
         }
 
         .day-cell:hover {
-            border-color: #667eea;
+            border-color: #1890ff;
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .day-cell.empty {
+            background: #fafafa;
+            cursor: default;
+        }
+
+        .day-cell.empty:hover {
+            border-color: #f0f0f0;
+            transform: none;
+            box-shadow: none;
         }
 
         .day-number {
             font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
+            color: #262626;
+            font-size: 14px;
+            margin-bottom: auto;
         }
 
-        .day-status {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            width: 30px;
-            height: 30px;
+        .day-cell.sunday .day-number {
+            color: #ff4d4f;
+        }
+
+        .day-cell.saturday .day-number {
+            color: #1890ff;
+        }
+
+        .day-status-badge {
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
+            font-weight: 600;
+            font-size: 10px;
+            margin-top: auto;
+            align-self: flex-end;
         }
 
         .status-complete {
-            background: #4caf50;
+            background: #52c41a;
             color: white;
         }
 
         .status-incomplete {
-            background: #f44336;
+            background: #ff4d4f;
             color: white;
         }
 
         .today {
-            border-color: #667eea;
-            background: #f5f7ff;
+            border-color: #1890ff;
+            background: #e6f7ff;
+            border-width: 2px;
         }
 
-        .legend {
-            display: flex;
-            gap: 30px;
-            justify-content: center;
-            margin-top: 30px;
+        .today .day-number {
+            color: #1890ff;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
             padding: 20px;
-            background: #f5f7ff;
-            border-radius: 12px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .stat-label {
+            color: #8c8c8c;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            color: #262626;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .legend-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            margin-top: 24px;
+        }
+
+        .legend-title {
+            color: #262626;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .legend-icon {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .legend-text {
+            color: #595959;
+            font-size: 14px;
         }
 
         .back-link {
             display: inline-block;
-            margin-top: 20px;
-            color: #667eea;
+            margin-top: 24px;
+            padding: 10px 20px;
+            background: white;
+            color: #1890ff;
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s;
+            border-radius: 4px;
+            border: 1px solid #d9d9d9;
+            font-weight: 500;
+            transition: all 0.3s;
         }
 
         .back-link:hover {
-            color: #764ba2;
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .day-cell {
+                padding: 8px;
+            }
+
+            .day-number {
+                font-size: 12px;
+            }
+
+            .day-status-badge {
+                width: 20px;
+                height: 20px;
+                font-size: 9px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📅 달력 플랜</h1>
+        <div class="page-header">
+            <h1>📅 달력 플랜</h1>
+            <p>일일 학습 진행 상황을 한눈에 확인하세요</p>
+        </div>
 
-        <div class="calendar-header">
-            <div class="month-nav">
-                <button onclick="previousMonth()">◀ 이전</button>
-                <span class="current-month"><%= currentMonth %></span>
-                <button onclick="nextMonth()">다음 ▶</button>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-label">이번 달 목표</div>
+                <div class="stat-value"><%= stats.monthlyGoal || 0 %>일</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-label">완료한 날</div>
+                <div class="stat-value"><%= stats.completedDays || 0 %>일</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-label">연속 달성</div>
+                <div class="stat-value"><%= stats.streak || 0 %>일</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-label">달성률</div>
+                <div class="stat-value"><%= stats.achievementRate || 0 %>%</div>
             </div>
         </div>
 
-        <div class="calendar-grid">
-            <div class="day-header">일</div>
-            <div class="day-header">월</div>
-            <div class="day-header">화</div>
-            <div class="day-header">수</div>
-            <div class="day-header">목</div>
-            <div class="day-header">금</div>
-            <div class="day-header">토</div>
-
-            <% calendarDays.forEach(day => { %>
-                <div class="day-cell <%= day.isToday ? 'today' : '' %>">
-                    <div class="day-number"><%= day.date %></div>
-                    <% if (day.status === 'complete') { %>
-                        <div class="day-status status-complete">완</div>
-                    <% } else if (day.status === 'incomplete') { %>
-                        <div class="day-status status-incomplete">실</div>
-                    <% } %>
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <div class="month-nav">
+                    <button class="nav-btn" onclick="previousMonth()">◀ 이전</button>
+                    <span class="current-month"><%= currentMonth %></span>
+                    <button class="nav-btn" onclick="nextMonth()">다음 ▶</button>
                 </div>
-            <% }); %>
+            </div>
+
+            <div class="calendar-grid">
+                <div class="day-header sunday">일</div>
+                <div class="day-header">월</div>
+                <div class="day-header">화</div>
+                <div class="day-header">수</div>
+                <div class="day-header">목</div>
+                <div class="day-header">금</div>
+                <div class="day-header saturday">토</div>
+
+                <% calendarDays.forEach(day => { %>
+                    <div class="day-cell <%= day.isEmpty ? 'empty' : '' %> <%= day.isToday ? 'today' : '' %> <%= day.isSunday ? 'sunday' : '' %> <%= day.isSaturday ? 'saturday' : '' %>">
+                        <% if (!day.isEmpty) { %>
+                            <div class="day-number"><%= day.date %></div>
+                            <% if (day.status === 'complete') { %>
+                                <div class="day-status-badge status-complete">✓</div>
+                            <% } else if (day.status === 'incomplete') { %>
+                                <div class="day-status-badge status-incomplete">✗</div>
+                            <% } %>
+                        <% } %>
+                    </div>
+                <% }); %>
+            </div>
         </div>
 
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-icon status-complete">완</div>
-                <span>완료 (다음날 +10% 보너스)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-icon status-incomplete">실</div>
-                <span>미완료</span>
+        <div class="legend-card">
+            <div class="legend-title">📖 범례</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-icon status-complete">✓</div>
+                    <span class="legend-text">완료 (다음날 +10% 보너스)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon status-incomplete">✗</div>
+                    <span class="legend-text">미완료</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-icon" style="background: #e6f7ff; color: #1890ff; border: 2px solid #1890ff;">
+                        <strong>●</strong>
+                    </div>
+                    <span class="legend-text">오늘</span>
+                </div>
             </div>
         </div>
 
         <a href="/home" class="back-link">← 홈으로 돌아가기</a>
     </div>
 
-    <script src="/js/calendar.js"></script>
+    <script>
+        function previousMonth() {
+            // 이전 달 로직
+            console.log('Previous month');
+        }
+
+        function nextMonth() {
+            // 다음 달 로직
+            console.log('Next month');
+        }
+    </script>
 </body>
 </html>

@@ -12,38 +12,49 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 24px;
         }
 
         .register-container {
             background: white;
-            padding: 50px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 48px 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             width: 500px;
-            max-width: 90%;
+            max-width: 100%;
+            border: 1px solid #e8e8e8;
         }
 
-        h1 {
+        .logo {
             text-align: center;
-            color: #667eea;
-            margin-bottom: 30px;
-            font-size: 32px;
+            margin-bottom: 32px;
+        }
+
+        .logo h1 {
+            color: #1890ff;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            color: #8c8c8c;
+            font-size: 14px;
         }
 
         .error {
-            background: #fee;
-            color: #c33;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #fcc;
+            background: #fff2f0;
+            color: #ff4d4f;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            border: 1px solid #ffccc7;
             font-size: 14px;
         }
 
@@ -54,8 +65,14 @@
         label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
+            color: #262626;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        label .required {
+            color: #ff4d4f;
+            margin-left: 4px;
         }
 
         input[type="text"],
@@ -63,121 +80,187 @@
         input[type="password"],
         select {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
+            padding: 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:hover,
+        select:hover {
+            border-color: #40a9ff;
         }
 
         input:focus,
         select:focus {
             outline: none;
-            border-color: #667eea;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-        }
-
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-        }
-
-        .login-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .login-link a:hover {
-            text-decoration: underline;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
         }
 
         .help-text {
             font-size: 12px;
-            color: #666;
-            margin-top: 4px;
+            color: #8c8c8c;
+            margin-top: 6px;
+        }
+
+        .button-primary {
+            width: 100%;
+            padding: 12px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .button-primary:hover {
+            background: #40a9ff;
+        }
+
+        .button-primary:active {
+            background: #096dd9;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 24px;
+            color: #595959;
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: #1890ff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            color: #40a9ff;
+        }
+
+        optgroup {
+            font-weight: 600;
+            color: #262626;
+        }
+
+        option {
+            padding: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="register-container">
-        <h1>회원가입</h1>
+        <div class="logo">
+            <h1>📚 스터디 플래너</h1>
+            <p>새로운 학습 여정을 시작하세요</p>
+        </div>
 
         <% if (error) { %>
-            <div class="error"><%= error %></div>
+            <div class="error">⚠️ <%= error %></div>
         <% } %>
 
         <form action="/auth/register" method="POST">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             
             <div class="form-group">
-                <label for="username">아이디 *</label>
-                <input type="text" id="username" name="username" required minlength="3" maxlength="20" placeholder="3-20자 영문, 숫자, 언더스코어">
+                <label for="username">
+                    아이디<span class="required">*</span>
+                </label>
+                <input type="text" 
+                       id="username" 
+                       name="username" 
+                       required 
+                       minlength="3" 
+                       maxlength="20" 
+                       placeholder="3-20자 영문, 숫자">
                 <div class="help-text">3-20자 사이로 입력해주세요</div>
             </div>
 
             <div class="form-group">
-                <label for="email">이메일 *</label>
-                <input type="email" id="email" name="email" required placeholder="example@cnsa.hs.kr">
+                <label for="email">
+                    이메일<span class="required">*</span>
+                </label>
+                <input type="email" 
+                       id="email" 
+                       name="email" 
+                       required 
+                       placeholder="example@cnsa.hs.kr">
                 <div class="help-text">학교 이메일(@cnsa.hs.kr)만 사용 가능합니다</div>
             </div>
 
             <div class="form-group">
-                <label for="password">비밀번호 *</label>
-                <input type="password" id="password" name="password" required minlength="8" placeholder="최소 8자 이상">
+                <label for="password">
+                    비밀번호<span class="required">*</span>
+                </label>
+                <input type="password" 
+                       id="password" 
+                       name="password" 
+                       required 
+                       minlength="8" 
+                       placeholder="최소 8자 이상">
                 <div class="help-text">최소 8자 이상 입력해주세요</div>
             </div>
 
-            <div class="form-group">
-                <label for="student_id">학번 *</label>
-                <input type="text" id="student_id" name="student_id" required placeholder="예: 10606">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="student_id">
+                        학번<span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           id="student_id" 
+                           name="student_id" 
+                           required 
+                           placeholder="예: 10606">
+                </div>
+
+                <div class="form-group">
+                    <label for="diploma">
+                        디플로마<span class="required">*</span>
+                    </label>
+                    <select id="diploma" name="diploma" required>
+                        <option value="">선택하세요</option>
+                        <optgroup label="이과">
+                            <option value="IT">IT</option>
+                            <option value="공학">공학</option>
+                            <option value="수학">수학</option>
+                            <option value="물리">물리</option>
+                            <option value="화학">화학</option>
+                            <option value="생명과학">생명과학</option>
+                            <option value="IB(자연)">IB(자연)</option>
+                        </optgroup>
+                        <optgroup label="문과">
+                            <option value="인문학(문학/사학/철학)">인문학</option>
+                            <option value="국제어문">국제어문</option>
+                            <option value="사회과학">사회과학</option>
+                            <option value="경제경영">경제경영</option>
+                            <option value="IB(인문)">IB(인문)</option>
+                        </optgroup>
+                        <optgroup label="예체">
+                            <option value="예술">예술</option>
+                            <option value="체육">체육</option>
+                        </optgroup>
+                    </select>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="diploma">디플로마 *</label>
-                <select id="diploma" name="diploma" required>
-                    <option value="">선택하세요</option>
-                    <optgroup label="이과">
-                        <option value="IT">IT</option>
-                        <option value="공학">공학</option>
-                        <option value="수학">수학</option>
-                        <option value="물리">물리</option>
-                        <option value="화학">화학</option>
-                        <option value="생명과학">생명과학</option>
-                        <option value="IB(자연)">IB(자연)</option>
-                    </optgroup>
-                    <optgroup label="문과">
-                        <option value="인문학(문학/사학/철학)">인문학(문학/사학/철학)</option>
-                        <option value="국제어문">국제어문</option>
-                        <option value="사회과학">사회과학</option>
-                        <option value="경제경영">경제경영</option>
-                        <option value="IB(인문)">IB(인문)</option>
-                    </optgroup>
-                    <optgroup label="예체">
-                        <option value="예술">예술</option>
-                        <option value="체육">체육</option>
-                    </optgroup>
-                </select>
-            </div>
-
-            <button type="submit">회원가입</button>
+            <button type="submit" class="button-primary">회원가입</button>
         </form>
 
         <div class="login-link">
