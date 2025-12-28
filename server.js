@@ -50,20 +50,34 @@ app.use(session({
   }
 }));
 
-/* ===== CSRF ===== */
-app.use(csurf({ cookie: false }));
+/* ===== CSRF (Auth 라우터 제외) ===== */
+const csrfProtection = csurf({ cookie: false });
+
+// CSRF 보호를 선택적으로 적용
+app.use((req, res, next) => {
+  // /auth 경로는 CSRF 보호 제외 (또는 별도 처리)
+  if (req.path.startsWith('/auth')) {
+    return next();
+  }
+  csrfProtection(req, res, next);
+});
 
 /* ===== 템플릿 전역 ===== */
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
-  res.locals.csrfToken = req.csrfToken(); // CSRF 토큰
+  // CSRF 토큰은 보호가 적용된 경우만 생성
+  res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   next();
 });
 
 /* ===== Rate Limit ===== */
-const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+const apiLimiter = rateLimit({ 
+  windowMs: 15 * 60 * 1000, 
+  max: 100,
+  message: 'Too many requests'
+});
 
-/* ===== Auth Router ===== */
+/* ===== Auth Router (CSRF 별도 처리) ===== */
 app.use('/auth', require('./routes/auth'));
 
 app.get('/', (req, res) => {
@@ -82,9 +96,9 @@ app.get('/home', authMiddleware, async (req, res) => {
       seasonRanking: [],
       dailyRanking: [],
       todayTodos: [],
-      goals: {},           // 기본값
-      stats: {},           // 기본값
-      match: null          // 기본값
+      goals: {},
+      stats: {},
+      match: null
     });
   } catch (err) {
     console.error('홈 오류:', err);
@@ -111,7 +125,7 @@ app.get('/todo', authMiddleware, async (req, res) => {
         completed: completedCount,
         percentage: todos.length ? Math.round((completedCount / todos.length) * 100) : 0
       },
-      goals: {} // 기본값
+      goals: {}
     });
   } catch (err) {
     console.error('TODO 오류:', err);
@@ -119,7 +133,7 @@ app.get('/todo', authMiddleware, async (req, res) => {
   }
 });
 
-app.post('/todo', authMiddleware, apiLimiter, async (req, res) => {
+app.post('/todo', authMiddleware, csrfProtection, apiLimiter, async (req, res) => {
   res.json({ success: true });
 });
 
@@ -130,7 +144,7 @@ app.get('/calendar', authMiddleware, (req, res) => {
   res.render('calendar', {
     user: req.session.user,
     currentMonth,
-    stats: {} // 기본값
+    stats: {}
   });
 });
 
@@ -155,9 +169,10 @@ app.use((req, res) => {
 /* ===== Error ===== */
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {
+    console.error('CSRF 토큰 오류:', req.path);
     return res.status(403).send('CSRF 토큰 오류');
   }
-  console.error(err.stack);
+  console.error('서버 오류:', err.stack);
   res.status(500).send('Server Error');
 });
 
