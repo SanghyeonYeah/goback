@@ -205,6 +205,15 @@
             background: #e6f7ff;
         }
 
+        .empty-state {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            color: #8c8c8c;
+            border: 1px solid #e8e8e8;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 16px;
@@ -252,7 +261,7 @@
     </div>
 
     <div class="season-info">
-        <% if (currentSeason) { %>
+        <% if (typeof currentSeason !== 'undefined' && currentSeason) { %>
             <h2>🎯 <%= currentSeason.name %></h2>
             <p><%= currentSeason.start_date %> - <%= currentSeason.end_date %></p>
             <% if (currentSeason.description) { %>
@@ -264,32 +273,39 @@
         <% } %>
     </div>
 
-    <ul class="ranking-list">
-        <% rankings.forEach((user, index) => { %>
-            <li class="ranking-item <%= user.id === session.user.id ? 'my-rank' : '' %>">
-                <div>
-                    <%= index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1 %>
-                </div>
-
-                <div class="user-info">
-                    <div class="username">
-                        <%= user.username %>
-                        <%= user.id === session.user.id ? '(나)' : '' %>
+    <% if (typeof rankings !== 'undefined' && rankings && rankings.length > 0) { %>
+        <ul class="ranking-list">
+            <% rankings.forEach((user, index) => { %>
+                <li class="ranking-item <%= (typeof session !== 'undefined' && session.user && user.id === session.user.id) ? 'my-rank' : '' %>">
+                    <div>
+                        <%= index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1 %>
                     </div>
-                    <div class="user-diploma"><%= user.diploma %></div>
-                </div>
 
-                <div class="score"><%= user.total_score %>점</div>
+                    <div class="user-info">
+                        <div class="username">
+                            <%= user.username %>
+                            <%= (typeof session !== 'undefined' && session.user && user.id === session.user.id) ? '(나)' : '' %>
+                        </div>
+                        <div class="user-diploma"><%= user.diploma || '-' %></div>
+                    </div>
 
-                <% if (user.id !== session.user.id) { %>
-                    <button class="pvp-btn"
-                            onclick="challengePVP('<%= user.id %>', '<%= user.username %>')">
-                        ⚔️ 도전
-                    </button>
-                <% } %>
-            </li>
-        <% }) %>
-    </ul>
+                    <div class="score"><%= user.total_score || 0 %>점</div>
+
+                    <% if (typeof session !== 'undefined' && session.user && user.id !== session.user.id) { %>
+                        <button class="pvp-btn"
+                                onclick="challengePVP('<%= user.id %>', '<%= user.username %>')">
+                            ⚔️ 도전
+                        </button>
+                    <% } %>
+                </li>
+            <% }) %>
+        </ul>
+    <% } else { %>
+        <div class="empty-state">
+            <h3 style="margin-bottom: 12px;">📊 랭킹 데이터가 없습니다</h3>
+            <p>학습을 시작하고 첫 번째 랭커가 되어보세요!</p>
+        </div>
+    <% } %>
 
     <a href="/home" class="back-link">← 홈으로 돌아가기</a>
 </div>
