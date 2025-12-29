@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../database/init');
+const { generateTodos } = require('../ai/todoGenerator');
 
 // 인증 미들웨어
 const requireAuth = (req, res, next) => {
@@ -9,7 +10,6 @@ const requireAuth = (req, res, next) => {
 };
 
 // 🔹 목표 데이터 정규화 함수
-// todo.ejs에서 쓰기 좋게 study_period 제거
 const normalizeGoals = (goalRow) => {
   if (!goalRow) return null;
 
@@ -57,7 +57,7 @@ router.get('/mypage', requireAuth, async (req, res) => {
 });
 
 // ==============================
-// 목표 수정
+// 목표 수정 + AI Todo 생성
 // POST /user/update-goals
 // ==============================
 router.post('/update-goals', requireAuth, async (req, res) => {
@@ -73,12 +73,16 @@ router.post('/update-goals', requireAuth, async (req, res) => {
   } = req.body;
 
   try {
+    // 기존 목표 확인
     const existing = await pool.query(
       'SELECT id FROM goals WHERE user_id = $1 ORDER BY id DESC LIMIT 1',
       [userId]
     );
 
+    let goalId;
+
     if (existing.rows.length > 0) {
+      goalId = existing.rows[0].id;
       await pool.query(
         `UPDATE goals
          SET korean=$1, math=$2, social=$3, science=$4,
@@ -92,14 +96,14 @@ router.post('/update-goals', requireAuth, async (req, res) => {
           english,
           history,
           studyPeriod,
-          existing.rows[0].id
+          goalId
         ]
       );
     } else {
-      await pool.query(
+      const insertRes = await pool.query(
         `INSERT INTO goals
          (user_id, korean, math, social, science, english, history, study_period)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
         [
           userId,
           korean,
@@ -111,9 +115,10 @@ router.post('/update-goals', requireAuth, async (req, res) => {
           studyPeriod
         ]
       );
+      goalId = insertRes.rows[0].id;
     }
 
-    // 세션에도 반영 (todo.ejs에서 바로 사용 가능)
+    // 세션 업데이트
     req.session.user.goals = {
       korean,
       math,
@@ -125,10 +130,35 @@ router.post('/update-goals', requireAuth, async (req, res) => {
     };
     req.session.save();
 
-    res.redirect('/user/mypage');
+    // ==============================
+    // AI Todo 생성
+    // ==============================
+    const existingTodosResult = await pool.query(
+      'SELECT subject, task, date FROM todos WHERE user_id=$1 AND date>=CURRENT_DATE',
+      [userId]
+    );
+
+    const aiTodos = await generateTodos(
+      { korean, math, english, social, science, history },
+      parseInt(studyPeriod),
+      userId,
+      existingTodosResult.rows
+    );
+
+    // DB 저장 (goal_id 포함)
+    for (const todo of aiTodos) {
+      await pool.query(
+        `INSERT INTO todos (user_id, goal_id, subject, task, difficulty, date, completed)
+         VALUES ($1,$2,$3,$4,$5,$6,false)`,
+        [userId, goalId, todo.subject, todo.task, todo.difficulty, todo.date]
+      );
+    }
+
+    // 목표 저장 후 홈으로 리다이렉트
+    res.redirect('/home');
   } catch (err) {
     console.error('목표 업데이트 오류:', err);
-    res.status(500).send('목표 등급 업데이트 중 오류 발생');
+    res.status(500).send('목표 등급 업데이트 또는 AI Todo 생성 중 오류 발생');
   }
 });
 
