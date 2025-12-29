@@ -27,20 +27,85 @@
             padding: 24px;
             border-radius: 8px;
             margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             border: 1px solid #e8e8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
         }
 
         .page-header h1 {
-            color: #262626;
             font-size: 24px;
             font-weight: 600;
-            margin-bottom: 8px;
+            color: #262626;
         }
 
         .page-header p {
             color: #8c8c8c;
             font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info {
+            color: #595959;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .header-btn {
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .header-btn.secondary {
+            background: white;
+            color: #595959;
+            border: 1px solid #d9d9d9;
+        }
+
+        .header-btn.secondary:hover {
+            background: #fafafa;
+            border-color: #40a9ff;
+            color: #1890ff;
+        }
+
+        .nav-menu {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu a {
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #595959;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a.active,
+        .nav-menu a:hover {
+            background: #e6f7ff;
+            color: #1890ff;
         }
 
         .stats-row {
@@ -283,30 +348,51 @@
             font-size: 14px;
         }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 24px;
-            padding: 10px 20px;
-            background: white;
-            color: #1890ff;
-            text-decoration: none;
-            border-radius: 4px;
-            border: 1px solid #d9d9d9;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
 
-        .back-link:hover {
-            border-color: #1890ff;
-            background: #e6f7ff;
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="page-header">
-            <h1>📝 문제 풀이</h1>
-            <p>다양한 문제를 풀고 실력을 향상시키세요</p>
+            <div>
+                <h1>📝 문제 풀이</h1>
+                <p>다양한 문제를 풀고 실력을 향상시키세요</p>
+            </div>
+            <div class="header-actions">
+                <span class="user-info"><%= user.student_id %>번 <%= user.username %>님</span>
+                <a href="/auth/logout" class="header-btn secondary">🚪 로그아웃</a>
+            </div>
+        </div>
+
+        <div class="nav-menu">
+            <a href="/home">홈</a>
+            <a href="/todo">할 일</a>
+            <a href="/calendar">달력</a>
+            <a href="/ranking">랭킹</a>
+            <a href="/problem" class="active">문제 풀이</a>
+            <a href="/pvp">PVP</a>
+            <a href="/mypage">마이페이지</a>
         </div>
 
         <div class="stats-row">
@@ -315,23 +401,23 @@
                     <span class="stat-icon">✅</span>
                 </div>
                 <div class="stat-label">푼 문제</div>
-                <div class="stat-value"><%= stats.totalSolved %>개</div>
+                <div class="stat-value"><%= stats.totalSolved || 0 %>개</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-icon">🏆</span>
+                    <span class="stat-icon">📚</span>
                 </div>
-                <div class="stat-label">총 점수</div>
-                <div class="stat-value"><%= stats.totalScore %>점</div>
+                <div class="stat-label">전체 문제</div>
+                <div class="stat-value"><%= stats.totalProblems || 0 %>개</div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-header">
                     <span class="stat-icon">📊</span>
                 </div>
-                <div class="stat-label">정확도</div>
-                <div class="stat-value"><%= stats.accuracy %>%</div>
+                <div class="stat-label">정답률</div>
+                <div class="stat-value"><%= stats.solvingRate || 0 %>%</div>
             </div>
         </div>
 
@@ -373,26 +459,26 @@
         <div class="problems-section">
             <h2 class="section-title">📚 문제 목록</h2>
 
-            <% if (problems.length > 0) { %>
+            <% if (problems && problems.length > 0) { %>
                 <ul class="problem-list">
                     <% problems.forEach(problem => { %>
                         <li class="problem-item <%= problem.solved ? 'solved' : '' %>" 
                             onclick="location.href='/problem/<%= problem.id %>'">
                             <div class="problem-header">
-                                <div class="problem-number">문제 #<%= problem.number %></div>
+                                <div class="problem-number">문제 #<%= problem.number || problem.id %></div>
                                 <div class="problem-badges">
-                                    <span class="score-badge"><%= problem.score %>점</span>
+                                    <span class="score-badge"><%= problem.score || 10 %>점</span>
                                     <% if (problem.solved) { %>
                                         <span class="solved-badge">✓ 완료</span>
                                     <% } %>
                                 </div>
                             </div>
                             <div class="problem-info">
-                                <span class="info-tag">📚 <%= problem.subject %></span>
-                                <span class="info-tag">⭐ <%= problem.difficulty %></span>
-                                <span class="info-tag">📖 <%= problem.type %></span>
+                                <span class="info-tag">📚 <%= problem.subject || '기타' %></span>
+                                <span class="info-tag">⭐ <%= problem.difficulty || '보통' %></span>
+                                <span class="info-tag">📖 <%= problem.type || '일반' %></span>
                             </div>
-                            <div class="problem-title"><%= problem.title %></div>
+                            <div class="problem-title"><%= problem.title || '제목 없음' %></div>
                             <button class="solve-btn <%= problem.solved ? 'retry' : '' %>" 
                                     onclick="event.stopPropagation(); location.href='/problem/<%= problem.id %>/solve'">
                                 <%= problem.solved ? '다시 풀기' : '풀이 시작' %>
@@ -408,8 +494,6 @@
                 </div>
             <% } %>
         </div>
-
-        <a href="/home" class="back-link">← 홈으로 돌아가기</a>
     </div>
 
     <script>
