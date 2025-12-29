@@ -43,6 +43,34 @@
             font-size: 14px;
         }
 
+        /* 네비게이션 메뉴 스타일 추가 */
+        .nav-menu {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu a {
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #595959;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a.active,
+        .nav-menu a:hover {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
         .calendar-card {
             background: white;
             padding: 32px;
@@ -313,10 +341,11 @@
             <p>일일 학습 진행 상황을 한눈에 확인하세요</p>
         </div>
 
+        <!-- 네비게이션 메뉴 추가 -->
         <div class="nav-menu">
-            <a href="/home" class="active">홈</a>
+            <a href="/home">홈</a>
             <a href="/todo">할 일</a>
-            <a href="/calendar">달력</a>
+            <a href="/calendar" class="active">달력</a>
             <a href="/ranking">랭킹</a>
             <a href="/problem">문제 풀이</a>
             <a href="/pvp">PVP</a>
