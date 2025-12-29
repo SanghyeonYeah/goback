@@ -44,6 +44,34 @@
             font-size: 14px;
         }
 
+        /* 네비게이션 메뉴 스타일 추가 */
+        .nav-menu {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 1px solid #e8e8e8;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-menu a {
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            color: #595959;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-menu a.active,
+        .nav-menu a:hover {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
         .tabs {
             background: white;
             padding: 8px;
@@ -74,6 +102,10 @@
 
         .tab:hover {
             background: #fafafa;
+        }
+
+        .tab.active:hover {
+            background: #1890ff;
         }
 
         .season-info {
@@ -172,6 +204,25 @@
         .back-link:hover {
             background: #e6f7ff;
         }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .ranking-item {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .score {
+                font-size: 18px;
+            }
+
+            .pvp-btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -181,6 +232,17 @@
     <div class="page-header">
         <h1>🏆 랭킹</h1>
         <p>학습 성과를 비교하고 경쟁하세요</p>
+    </div>
+
+    <!-- 네비게이션 메뉴 추가 -->
+    <div class="nav-menu">
+        <a href="/home">홈</a>
+        <a href="/todo">할 일</a>
+        <a href="/calendar">달력</a>
+        <a href="/ranking" class="active">랭킹</a>
+        <a href="/problem">문제 풀이</a>
+        <a href="/pvp">PVP</a>
+        <a href="/mypage">마이페이지</a>
     </div>
 
     <!-- 주간 랭킹 제거 -->
