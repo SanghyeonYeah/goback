@@ -13,6 +13,7 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const csurf = require('csurf');
 const pool = require('./database/init');
+const { generateTodos } = require('./ai/todoGenerator'); // AI 모듈 import
 
 const { authMiddleware } = require('./middleware/auth');
 
@@ -107,13 +108,24 @@ app.get('/home', authMiddleware, async (req, res) => {
 app.get('/todo', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, subject, task, completed
+      `SELECT id, subject, task, difficulty, completed
        FROM todos
        WHERE user_id = $1 AND date = CURRENT_DATE`,
       [req.session.user.id]
     );
     const todos = result.rows || [];
     const completedCount = todos.filter(t => t.completed).length;
+
+    // 목표 조회
+    const goalsResult = await pool.query(
+      `SELECT korean, math, english, social, science, history
+       FROM goals
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [req.session.user.id]
+    );
+    const goals = goalsResult.rows[0] || {};
 
     res.render('todo', {
       todos,
@@ -122,7 +134,7 @@ app.get('/todo', authMiddleware, async (req, res) => {
         completed: completedCount,
         percentage: todos.length ? Math.round((completedCount / todos.length) * 100) : 0
       },
-      goals: {}
+      goals
     });
   } catch (err) {
     console.error('TODO 오류:', err);
@@ -132,6 +144,41 @@ app.get('/todo', authMiddleware, async (req, res) => {
 
 app.post('/todo', authMiddleware, csrfProtection, apiLimiter, async (req, res) => {
   res.json({ success: true });
+});
+
+/* ===== TODO 토글 ===== */
+app.post('/todos/:id/toggle', authMiddleware, csrfProtection, async (req, res) => {
+  const userId = req.session.user.id;
+  const todoId = req.params.id;
+
+  try {
+    // Todo 소유권 + 상태 확인
+    const todoResult = await pool.query(
+      `SELECT completed, date FROM todos WHERE id = $1 AND user_id = $2`,
+      [todoId, userId]
+    );
+
+    if (todoResult.rows.length === 0) {
+      return res.status(404).send('존재하지 않는 Todo');
+    }
+
+    const currentCompleted = todoResult.rows[0].completed;
+    const date = todoResult.rows[0].date;
+
+    // 상태 토글
+    await pool.query(
+      `UPDATE todos
+       SET completed = $1,
+           completed_at = CASE WHEN $1 THEN NOW() ELSE NULL END
+       WHERE id = $2`,
+      [!currentCompleted, todoId]
+    );
+
+    res.redirect('/todo');
+  } catch (err) {
+    console.error('Todo 토글 오류:', err);
+    res.status(500).send('처리 실패');
+  }
 });
 
 /* ===== CALENDAR ===== */
@@ -165,17 +212,65 @@ app.get('/calendar', authMiddleware, async (req, res) => {
         isToday: currentDate.toDateString() === now.toDateString(),
         isSunday: dayOfWeek === 0,
         isSaturday: dayOfWeek === 6,
-        todos: []
+        status: null // 'complete', 'incomplete' 또는 null
       });
     }
+
+    // 해당 월의 완료 기록 조회
+    const recordsResult = await pool.query(
+      `SELECT date, 
+              CASE 
+                WHEN COUNT(*) = COUNT(*) FILTER (WHERE completed = true) THEN 'complete'
+                ELSE 'incomplete'
+              END as status
+       FROM todos
+       WHERE user_id = $1 
+       AND EXTRACT(YEAR FROM date) = $2
+       AND EXTRACT(MONTH FROM date) = $3
+       GROUP BY date`,
+      [req.session.user.id, year, month]
+    );
+
+    // 기록을 캘린더에 반영
+    recordsResult.rows.forEach(record => {
+      const day = new Date(record.date).getDate();
+      const dayIndex = startDayOfWeek + day - 1;
+      if (calendarDays[dayIndex]) {
+        calendarDays[dayIndex].status = record.status;
+      }
+    });
+
+    // 통계 계산
+    const statsResult = await pool.query(
+      `SELECT 
+        COUNT(DISTINCT date) FILTER (
+          WHERE completed = true 
+          AND EXTRACT(MONTH FROM date) = $2
+        ) as completed_days,
+        COUNT(DISTINCT date) as total_days
+       FROM todos
+       WHERE user_id = $1
+       AND EXTRACT(YEAR FROM date) = $2
+       AND EXTRACT(MONTH FROM date) = $3`,
+      [req.session.user.id, year, month]
+    );
+
+    const stats = statsResult.rows[0] || { completed_days: 0, total_days: 0 };
     
     res.render('calendar', {
       user: req.session.user,
-      currentMonth: `${year}-${month}`,
+      currentMonth: `${year}년 ${month}월`,
       year,
       month,
       calendarDays,
-      stats: {}
+      stats: {
+        monthlyGoal: daysInMonth,
+        completedDays: parseInt(stats.completed_days) || 0,
+        streak: 0, // TODO: 연속 달성 계산
+        achievementRate: stats.total_days > 0 
+          ? Math.round((stats.completed_days / stats.total_days) * 100) 
+          : 0
+      }
     });
   } catch (err) {
     console.error('캘린더 오류:', err);
@@ -186,7 +281,7 @@ app.get('/calendar', authMiddleware, async (req, res) => {
 /* ===== RANKING ===== */
 app.get('/ranking', authMiddleware, async (req, res) => {
   try {
-    // 현재 시즌 조회 (description 컬럼 제외)
+    // 현재 시즌 조회
     const seasonResult = await pool.query(
       `SELECT id, name, start_date, end_date 
        FROM seasons 
@@ -198,40 +293,34 @@ app.get('/ranking', authMiddleware, async (req, res) => {
     const currentSeason = seasonResult.rows[0] || null;
     
     // 시즌 랭킹 조회
-    let seasonRanking = [];
+    let rankings = [];
     if (currentSeason) {
       const rankingResult = await pool.query(
-        `SELECT u.username, sr.total_points, sr.rank
-         FROM season_rankings sr
-         JOIN users u ON sr.user_id = u.id
-         WHERE sr.season_id = $1
-         ORDER BY sr.rank
+        `SELECT u.id, u.username, u.diploma, 
+                COALESCE(sr.total_score, 0) as total_score
+         FROM users u
+         LEFT JOIN season_rankings sr ON u.id = sr.user_id AND sr.season_id = $1
+         ORDER BY total_score DESC
          LIMIT 10`,
         [currentSeason.id]
       );
-      seasonRanking = rankingResult.rows;
+      rankings = rankingResult.rows;
     }
-    
-    // 일일 랭킹 조회
-    const dailyResult = await pool.query(
-      `SELECT u.username, COUNT(*) as completed_count
-       FROM todos t
-       JOIN users u ON t.user_id = u.id
-       WHERE t.date = CURRENT_DATE AND t.completed = true
-       GROUP BY u.id, u.username
-       ORDER BY completed_count DESC
-       LIMIT 10`
-    );
     
     res.render('ranking', {
       user: req.session.user,
+      session: req.session,
       currentSeason,
-      seasonRanking,
-      dailyRanking: dailyResult.rows
+      rankings
     });
   } catch (err) {
     console.error('랭킹 오류:', err);
-    res.status(500).send('페이지 오류');
+    res.render('ranking', {
+      user: req.session.user,
+      session: req.session,
+      currentSeason: null,
+      rankings: []
+    });
   }
 });
 
@@ -240,10 +329,9 @@ app.get('/pvp', authMiddleware, (req, res) => {
   res.render('pvp', { user: req.session.user, match: null });
 });
 
-/* ===== PROBLEM (추가) ===== */
+/* ===== PROBLEM ===== */
 app.get('/problem', authMiddleware, async (req, res) => {
   try {
-    // 문제 목록 조회
     const problemsResult = await pool.query(
       `SELECT id, title, difficulty, category, solved 
        FROM problems 
@@ -251,7 +339,6 @@ app.get('/problem', authMiddleware, async (req, res) => {
        LIMIT 50`
     );
     
-    // 사용자 통계 조회
     const statsResult = await pool.query(
       `SELECT 
         COUNT(*) FILTER (WHERE solved = true) as total_solved,
@@ -274,23 +361,17 @@ app.get('/problem', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error('문제 페이지 오류:', err);
-    // 테이블이 없는 경우 기본값으로 렌더링
     res.render('problem', { 
       user: req.session.user, 
       problems: [],
-      stats: {
-        totalSolved: 0,
-        totalProblems: 0,
-        solvingRate: 0
-      }
+      stats: { totalSolved: 0, totalProblems: 0, solvingRate: 0 }
     });
   }
 });
 
-/* ===== MYPAGE (추가) ===== */
+/* ===== MYPAGE ===== */
 app.get('/mypage', authMiddleware, async (req, res) => {
   try {
-    // 사용자 통계 조회
     const statsResult = await pool.query(
       `SELECT 
         COUNT(*) FILTER (WHERE completed = true) as completed_total,
@@ -300,11 +381,11 @@ app.get('/mypage', authMiddleware, async (req, res) => {
       [req.session.user.id]
     );
     
-    // 목표 조회
     const goalsResult = await pool.query(
-      `SELECT korean, math, english, science, social 
+      `SELECT korean, math, english, science, social, history, study_period
        FROM goals 
-       WHERE user_id = $1 
+       WHERE user_id = $1
+       ORDER BY created_at DESC
        LIMIT 1`,
       [req.session.user.id]
     );
@@ -314,7 +395,9 @@ app.get('/mypage', authMiddleware, async (req, res) => {
       math: 3,
       english: 3,
       science: 3,
-      social: 3
+      social: 3,
+      history: 3,
+      study_period: 14
     };
     
     res.render('mypage', {
@@ -324,18 +407,85 @@ app.get('/mypage', authMiddleware, async (req, res) => {
     });
   } catch (err) {
     console.error('마이페이지 오류:', err);
-    // 에러 발생 시 기본값으로 렌더링
     res.render('mypage', {
       user: req.session.user,
       stats: { completed_total: 0, total_todos: 0 },
-      goals: {
-        korean: 3,
-        math: 3,
-        english: 3,
-        science: 3,
-        social: 3
-      }
+      goals: { korean: 3, math: 3, english: 3, science: 3, social: 3, history: 3, study_period: 14 }
     });
+  }
+});
+
+/* ===== USER UPDATE GOALS (AI 통합) ===== */
+app.post('/user/update-goals', authMiddleware, csrfProtection, async (req, res) => {
+  const userId = req.session.user.id;
+  const { korean, math, english, social, science, history, studyPeriod } = req.body;
+  
+  try {
+    // 1. 기존 목표 확인
+    const existingResult = await pool.query(
+      `SELECT id FROM goals WHERE user_id=$1 ORDER BY created_at DESC LIMIT 1`,
+      [userId]
+    );
+    
+    if (existingResult.rows.length > 0) {
+      // 업데이트
+      await pool.query(
+        `UPDATE goals 
+         SET korean=$1, math=$2, english=$3, social=$4, science=$5, history=$6, study_period=$7, created_at=NOW()
+         WHERE id=$8`,
+        [korean, math, english, social, science, history, studyPeriod, existingResult.rows[0].id]
+      );
+    } else {
+      // 새 목표 INSERT
+      await pool.query(
+        `INSERT INTO goals (user_id, korean, math, english, social, science, history, study_period, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW())`,
+        [userId, korean, math, english, social, science, history, studyPeriod]
+      );
+    }
+    
+    // 2. 세션 업데이트
+    req.session.user.goals = { 
+      korean, math, english, social, science, history, 
+      study_period: studyPeriod 
+    };
+    req.session.save();
+    
+    // 3. 기존 Todo 삭제 (오늘 이후)
+    await pool.query(
+      `DELETE FROM todos WHERE user_id=$1 AND date >= CURRENT_DATE`,
+      [userId]
+    );
+    
+    // 4. 기존 Todo 조회 (오늘 이후) - AI에 컨텍스트 제공
+    const existingTodosResult = await pool.query(
+      `SELECT subject, task, date FROM todos WHERE user_id=$1 AND date >= CURRENT_DATE`,
+      [userId]
+    );
+    
+    // 5. AI Todo 생성
+    const aiTodos = await generateTodos(
+      { korean, math, english, social, science, history },
+      parseInt(studyPeriod),
+      userId,
+      existingTodosResult.rows
+    );
+    
+    // 6. Todo DB 저장
+    for (const todo of aiTodos) {
+      await pool.query(
+        `INSERT INTO todos (user_id, subject, task, difficulty, date, completed)
+         VALUES ($1,$2,$3,$4,$5,false)`,
+        [userId, todo.subject, todo.task, todo.difficulty, todo.date]
+      );
+    }
+    
+    console.log(`✅ ${userId}번 사용자: AI Todo ${aiTodos.length}개 생성 완료`);
+    res.redirect('/todo');
+    
+  } catch (err) {
+    console.error('[GOALS UPDATE ERROR]', err);
+    res.status(500).send('목표 업데이트 또는 AI Todo 생성 실패');
   }
 });
 
